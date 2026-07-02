@@ -1,22 +1,47 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AutomaticGateAndEntryways.com Enterprise FSM Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: jobs
+    description: Job management
+  - name: estimates
+    description: Estimate management
+  - name: invoices
+    description: Invoice management
+  - name: portfolio
+    description: Portfolio management
+  - name: faq
+    description: FAQ management
+  - name: blog
+    description: Blog management
+  - name: newsletter
+    description: Newsletter management
+  - name: analytics
+    description: Analytics and reporting
+  - name: notifications
+    description: Notifications
+  - name: settings
+    description: Application settings
+  - name: time-entries
+    description: Time tracking
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +49,2055 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ───────────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register new client account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+
+  # ─── USERS ──────────────────────────────────────────────────────────────
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── ESTIMATES ──────────────────────────────────────────────────────────
+  /estimates:
+    get:
+      operationId: listEstimates
+      tags: [estimates]
+      summary: List estimates
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of estimates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Estimate"
+    post:
+      operationId: createEstimate
+      tags: [estimates]
+      summary: Create estimate request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstimateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Estimate"
+
+  /estimates/{id}:
+    get:
+      operationId: getEstimate
+      tags: [estimates]
+      summary: Get estimate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Estimate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Estimate"
+    patch:
+      operationId: updateEstimate
+      tags: [estimates]
+      summary: Update estimate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstimateUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Estimate"
+    delete:
+      operationId: deleteEstimate
+      tags: [estimates]
+      summary: Delete estimate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /estimates/{id}/approve:
+    patch:
+      operationId: approveEstimate
+      tags: [estimates]
+      summary: Approve estimate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Estimate"
+
+  /estimates/{id}/convert:
+    post:
+      operationId: convertEstimateToInvoice
+      tags: [estimates]
+      summary: Convert estimate to invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Invoice created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  # ─── INVOICES ───────────────────────────────────────────────────────────
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [invoices]
+      summary: List invoices
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+    post:
+      operationId: createInvoice
+      tags: [invoices]
+      summary: Create invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [invoices]
+      summary: Get invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+    patch:
+      operationId: updateInvoice
+      tags: [invoices]
+      summary: Update invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}/pay:
+    patch:
+      operationId: markInvoicePaid
+      tags: [invoices]
+      summary: Mark invoice as paid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marked paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  # ─── JOBS ───────────────────────────────────────────────────────────────
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List jobs
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: assignedToId
+          in: query
+          schema:
+            type: integer
+        - name: date
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Create job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+    patch:
+      operationId: updateJob
+      tags: [jobs]
+      summary: Update job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+    delete:
+      operationId: deleteJob
+      tags: [jobs]
+      summary: Delete job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /jobs/{id}/status:
+    patch:
+      operationId: updateJobStatus
+      tags: [jobs]
+      summary: Update job status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobStatusUpdate"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+
+  /jobs/{id}/assign:
+    patch:
+      operationId: assignJob
+      tags: [jobs]
+      summary: Assign job to technician
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobAssignment"
+      responses:
+        "200":
+          description: Assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+
+  # ─── PORTFOLIO ──────────────────────────────────────────────────────────
+  /portfolio:
+    get:
+      operationId: listPortfolioItems
+      tags: [portfolio]
+      summary: List portfolio items
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of portfolio items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortfolioItem"
+    post:
+      operationId: createPortfolioItem
+      tags: [portfolio]
+      summary: Create portfolio item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioItem"
+
+  /portfolio/{id}:
+    get:
+      operationId: getPortfolioItem
+      tags: [portfolio]
+      summary: Get portfolio item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Portfolio item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioItem"
+    patch:
+      operationId: updatePortfolioItem
+      tags: [portfolio]
+      summary: Update portfolio item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioItemUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioItem"
+    delete:
+      operationId: deletePortfolioItem
+      tags: [portfolio]
+      summary: Delete portfolio item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── FAQ ────────────────────────────────────────────────────────────────
+  /faqs:
+    get:
+      operationId: listFaqs
+      tags: [faq]
+      summary: List FAQs
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of FAQs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Faq"
+    post:
+      operationId: createFaq
+      tags: [faq]
+      summary: Create FAQ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FaqInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faq"
+
+  /faqs/{id}:
+    get:
+      operationId: getFaq
+      tags: [faq]
+      summary: Get FAQ
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: FAQ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faq"
+    patch:
+      operationId: updateFaq
+      tags: [faq]
+      summary: Update FAQ
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FaqUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faq"
+    delete:
+      operationId: deleteFaq
+      tags: [faq]
+      summary: Delete FAQ
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── BLOG ───────────────────────────────────────────────────────────────
+  /posts:
+    get:
+      operationId: listPosts
+      tags: [blog]
+      summary: List blog posts
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: published
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      operationId: createPost
+      tags: [blog]
+      summary: Create blog post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/{id}:
+    get:
+      operationId: getPost
+      tags: [blog]
+      summary: Get blog post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    patch:
+      operationId: updatePost
+      tags: [blog]
+      summary: Update blog post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    delete:
+      operationId: deletePost
+      tags: [blog]
+      summary: Delete blog post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── NEWSLETTER ─────────────────────────────────────────────────────────
+  /newsletter/subscribers:
+    get:
+      operationId: listSubscribers
+      tags: [newsletter]
+      summary: List newsletter subscribers
+      responses:
+        "200":
+          description: List of subscribers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscriber"
+
+  /newsletter/subscribe:
+    post:
+      operationId: subscribe
+      tags: [newsletter]
+      summary: Subscribe to newsletter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriberInput"
+      responses:
+        "201":
+          description: Subscribed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscriber"
+
+  /newsletter/subscribers/{id}:
+    delete:
+      operationId: unsubscribe
+      tags: [newsletter]
+      summary: Unsubscribe
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Unsubscribed
+
+  # ─── ANALYTICS ──────────────────────────────────────────────────────────
+  /analytics/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [analytics]
+      summary: Get dashboard analytics summary
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /analytics/revenue:
+    get:
+      operationId: getRevenueData
+      tags: [analytics]
+      summary: Get revenue data by month
+      responses:
+        "200":
+          description: Revenue data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RevenuePoint"
+
+  /analytics/technicians:
+    get:
+      operationId: getTechnicianPerformance
+      tags: [analytics]
+      summary: Get technician performance data
+      responses:
+        "200":
+          description: Technician performance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TechnicianPerformance"
+
+  # ─── NOTIFICATIONS ──────────────────────────────────────────────────────
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for current user
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: All marked read
+
+  # ─── SETTINGS ───────────────────────────────────────────────────────────
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get application settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update application settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppSettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+
+  # ─── TIME ENTRIES ────────────────────────────────────────────────────────
+  /time-entries:
+    get:
+      operationId: listTimeEntries
+      tags: [time-entries]
+      summary: List time entries
+      parameters:
+        - name: jobId
+          in: query
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Time entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimeEntry"
+    post:
+      operationId: createTimeEntry
+      tags: [time-entries]
+      summary: Create time entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimeEntryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeEntry"
+
+  /time-entries/{id}:
+    patch:
+      operationId: updateTimeEntry
+      tags: [time-entries]
+      summary: Update time entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimeEntryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeEntry"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ─── AUTH ────────────────────────────────────────────────────────────
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    RegisterInput:
+      type: object
+      required: [email, password, firstName, lastName, phone]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    # ─── USER ────────────────────────────────────────────────────────────
+    User:
+      type: object
+      required: [id, email, firstName, lastName, role, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [admin, manager, supervisor, crew, client]
+        avatarUrl:
+          type: ["string", "null"]
+        hourlyRate:
+          type: ["number", "null"]
+        isSupervisor:
+          type: boolean
+        isActive:
+          type: boolean
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        zip:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    UserInput:
+      type: object
+      required: [email, password, firstName, lastName, role]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, supervisor, crew, client]
+        hourlyRate:
+          type: number
+        isSupervisor:
+          type: boolean
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+        hourlyRate:
+          type: number
+        isSupervisor:
+          type: boolean
+        isActive:
+          type: boolean
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        avatarUrl:
+          type: string
+
+    # ─── ESTIMATE ────────────────────────────────────────────────────────
+    Estimate:
+      type: object
+      required: [id, estimateNumber, clientId, status, gateType, propertyAddress, createdAt]
+      properties:
+        id:
+          type: integer
+        estimateNumber:
+          type: string
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        clientEmail:
+          type: ["string", "null"]
+        clientPhone:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, reviewed, approved, rejected, converted]
+        gateType:
+          type: string
+          enum: [single_gate, dual_gate, sliding_gate, commercial, access_control, intercom, repair, maintenance, new_installation]
+        propertyAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        description:
+          type: ["string", "null"]
+        siteVisitFee:
+          type: number
+        estimateAmount:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        imageUrls:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EstimateInput:
+      type: object
+      required: [gateType, propertyAddress, city, state, zip, firstName, lastName, email, phone, acceptedTerms]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        gateType:
+          type: string
+          enum: [single_gate, dual_gate, sliding_gate, commercial, access_control, intercom, repair, maintenance, new_installation]
+        propertyAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        description:
+          type: string
+        acceptedTerms:
+          type: boolean
+
+    EstimateUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        gateType:
+          type: string
+        propertyAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        description:
+          type: string
+        estimateAmount:
+          type: number
+        notes:
+          type: string
+
+    # ─── INVOICE ─────────────────────────────────────────────────────────
+    Invoice:
+      type: object
+      required: [id, invoiceNumber, clientId, status, amount, createdAt]
+      properties:
+        id:
+          type: integer
+        invoiceNumber:
+          type: string
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        estimateId:
+          type: ["integer", "null"]
+        jobId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [pending, partial, paid, overdue]
+        amount:
+          type: number
+        amountPaid:
+          type: number
+        dueDate:
+          type: ["string", "null"]
+        paidAt:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        lineItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceLineItem"
+        createdAt:
+          type: string
+          format: date-time
+
+    InvoiceLineItem:
+      type: object
+      required: [description, quantity, unitPrice, total]
+      properties:
+        description:
+          type: string
+        quantity:
+          type: number
+        unitPrice:
+          type: number
+        total:
+          type: number
+
+    InvoiceInput:
+      type: object
+      required: [clientId, amount, lineItems]
+      properties:
+        clientId:
+          type: integer
+        estimateId:
+          type: integer
+        jobId:
+          type: integer
+        amount:
+          type: number
+        dueDate:
+          type: string
+        notes:
+          type: string
+        lineItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceLineItem"
+
+    InvoiceUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        amount:
+          type: number
+        amountPaid:
+          type: number
+        dueDate:
+          type: string
+        notes:
+          type: string
+        lineItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceLineItem"
+
+    # ─── JOB ─────────────────────────────────────────────────────────────
+    Job:
+      type: object
+      required: [id, title, status, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [scheduled, in_progress, paused, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        assignedToId:
+          type: ["integer", "null"]
+        assignedToName:
+          type: ["string", "null"]
+        invoiceId:
+          type: ["integer", "null"]
+        estimateId:
+          type: ["integer", "null"]
+        propertyAddress:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        scheduledDate:
+          type: ["string", "null"]
+        scheduledTime:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        gateType:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        photoUrls:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    JobInput:
+      type: object
+      required: [title, status]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, in_progress, paused, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        clientId:
+          type: integer
+        assignedToId:
+          type: integer
+        invoiceId:
+          type: integer
+        estimateId:
+          type: integer
+        propertyAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        scheduledDate:
+          type: string
+        scheduledTime:
+          type: string
+        gateType:
+          type: string
+        notes:
+          type: string
+
+    JobUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        assignedToId:
+          type: integer
+        scheduledDate:
+          type: string
+        scheduledTime:
+          type: string
+        propertyAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        gateType:
+          type: string
+        notes:
+          type: string
+
+    JobStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [scheduled, in_progress, paused, completed, cancelled]
+        notes:
+          type: string
+
+    JobAssignment:
+      type: object
+      required: [assignedToId]
+      properties:
+        assignedToId:
+          type: integer
+        scheduledDate:
+          type: string
+        scheduledTime:
+          type: string
+
+    # ─── PORTFOLIO ───────────────────────────────────────────────────────
+    PortfolioItem:
+      type: object
+      required: [id, title, category, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: string
+          enum: [residential, commercial, repair, installation, access_control, liftmaster, ghost_controls, linear, gto_pro, mighty_mule]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        imageUrls:
+          type: array
+          items:
+            type: string
+        beforeImageUrl:
+          type: ["string", "null"]
+        afterImageUrl:
+          type: ["string", "null"]
+        brands:
+          type: array
+          items:
+            type: string
+        completedDate:
+          type: ["string", "null"]
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        featured:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    PortfolioItemInput:
+      type: object
+      required: [title, category]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [residential, commercial, repair, installation, access_control, liftmaster, ghost_controls, linear, gto_pro, mighty_mule]
+        city:
+          type: string
+        state:
+          type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
+        beforeImageUrl:
+          type: string
+        afterImageUrl:
+          type: string
+        brands:
+          type: array
+          items:
+            type: string
+        completedDate:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        featured:
+          type: boolean
+
+    PortfolioItemUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
+        beforeImageUrl:
+          type: string
+        afterImageUrl:
+          type: string
+        brands:
+          type: array
+          items:
+            type: string
+        completedDate:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        featured:
+          type: boolean
+
+    # ─── FAQ ─────────────────────────────────────────────────────────────
+    Faq:
+      type: object
+      required: [id, question, answer, category, sortOrder, createdAt]
+      properties:
+        id:
+          type: integer
+        question:
+          type: string
+        answer:
+          type: string
+        category:
+          type: string
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    FaqInput:
+      type: object
+      required: [question, answer, category]
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+        category:
+          type: string
+        sortOrder:
+          type: integer
+
+    FaqUpdate:
+      type: object
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+        category:
+          type: string
+        sortOrder:
+          type: integer
+
+    # ─── BLOG ────────────────────────────────────────────────────────────
+    Post:
+      type: object
+      required: [id, title, slug, content, published, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        slug:
+          type: string
+        excerpt:
+          type: ["string", "null"]
+        content:
+          type: string
+        featuredImageUrl:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        published:
+          type: boolean
+        authorId:
+          type: ["integer", "null"]
+        authorName:
+          type: ["string", "null"]
+        seoTitle:
+          type: ["string", "null"]
+        seoDescription:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    PostInput:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        excerpt:
+          type: string
+        content:
+          type: string
+        featuredImageUrl:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        published:
+          type: boolean
+        seoTitle:
+          type: string
+        seoDescription:
+          type: string
+
+    PostUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        excerpt:
+          type: string
+        content:
+          type: string
+        featuredImageUrl:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        published:
+          type: boolean
+        seoTitle:
+          type: string
+        seoDescription:
+          type: string
+
+    # ─── NEWSLETTER ──────────────────────────────────────────────────────
+    Subscriber:
+      type: object
+      required: [id, email, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    SubscriberInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+
+    # ─── ANALYTICS ───────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [totalJobs, activeJobs, completedJobs, totalRevenue, pendingEstimates, approvedEstimates, overdueInvoices, totalClients, totalTechnicians]
+      properties:
+        totalJobs:
+          type: integer
+        activeJobs:
+          type: integer
+        completedJobs:
+          type: integer
+        scheduledJobs:
+          type: integer
+        totalRevenue:
+          type: number
+        pendingRevenue:
+          type: number
+        pendingEstimates:
+          type: integer
+        approvedEstimates:
+          type: integer
+        overdueInvoices:
+          type: integer
+        totalClients:
+          type: integer
+        totalTechnicians:
+          type: integer
+        estimateConversionRate:
+          type: number
+        avgJobValue:
+          type: number
+
+    RevenuePoint:
+      type: object
+      required: [month, revenue, jobs]
+      properties:
+        month:
+          type: string
+        revenue:
+          type: number
+        jobs:
+          type: integer
+
+    TechnicianPerformance:
+      type: object
+      required: [id, name, completedJobs, totalHours, revenue]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        completedJobs:
+          type: integer
+        totalHours:
+          type: number
+        revenue:
+          type: number
+        rating:
+          type: ["number", "null"]
+
+    # ─── NOTIFICATION ────────────────────────────────────────────────────
+    Notification:
+      type: object
+      required: [id, userId, title, message, type, read, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [job_assigned, job_completed, estimate_approved, invoice_paid, new_estimate, general]
+        read:
+          type: boolean
+        relatedId:
+          type: ["integer", "null"]
+        relatedType:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── SETTINGS ────────────────────────────────────────────────────────
+    AppSettings:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+        companyName:
+          type: string
+        companyPhone:
+          type: string
+        companyEmail:
+          type: string
+        companyAddress:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        websiteUrl:
+          type: ["string", "null"]
+        siteVisitFee:
+          type: number
+        taxRate:
+          type: number
+        enableHomepageMap:
+          type: boolean
+        enableAiChat:
+          type: boolean
+        enableNewsletter:
+          type: boolean
+        enablePortfolio:
+          type: boolean
+        enableBlog:
+          type: boolean
+        facebookUrl:
+          type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        twitterUrl:
+          type: ["string", "null"]
+        youtubeUrl:
+          type: ["string", "null"]
+        businessHours:
+          type: ["string", "null"]
+
+    AppSettingsUpdate:
+      type: object
+      properties:
+        companyName:
+          type: string
+        companyPhone:
+          type: string
+        companyEmail:
+          type: string
+        companyAddress:
+          type: string
+        logoUrl:
+          type: string
+        websiteUrl:
+          type: string
+        siteVisitFee:
+          type: number
+        taxRate:
+          type: number
+        enableHomepageMap:
+          type: boolean
+        enableAiChat:
+          type: boolean
+        enableNewsletter:
+          type: boolean
+        enablePortfolio:
+          type: boolean
+        enableBlog:
+          type: boolean
+        facebookUrl:
+          type: string
+        instagramUrl:
+          type: string
+        twitterUrl:
+          type: string
+        youtubeUrl:
+          type: string
+        businessHours:
+          type: string
+
+    # ─── TIME ENTRY ──────────────────────────────────────────────────────
+    TimeEntry:
+      type: object
+      required: [id, userId, jobId, startTime, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: ["string", "null"]
+        jobId:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: ["string", "null"]
+        hoursWorked:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        approved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    TimeEntryInput:
+      type: object
+      required: [userId, jobId, startTime]
+      properties:
+        userId:
+          type: integer
+        jobId:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        hoursWorked:
+          type: number
+        notes:
+          type: string
+
+    TimeEntryUpdate:
+      type: object
+      properties:
+        endTime:
+          type: string
+          format: date-time
+        hoursWorked:
+          type: number
+        notes:
+          type: string
+        approved:
+          type: boolean

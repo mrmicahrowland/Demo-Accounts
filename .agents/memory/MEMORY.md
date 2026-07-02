@@ -1,0 +1,3 @@
+- [Analytics SQL Pitfall](analytics-sql.md) — use raw column names with `::int`/`::float` casts in Drizzle `sql<>` templates, not camelCase ORM properties.
+- [CSS Google Fonts Import](css-google-fonts.md) — load Google Fonts via `<link>` in index.html, never via `@import` in CSS with Tailwind v4 (PostCSS build error).
+- [Orval Hook Names](orval-hook-names.md) — always verify exact generated hook names in `lib/api-client-react/src/generated/api.ts`; they differ from intuitive names (e.g. `useConvertEstimateToInvoice`, `useMarkInvoicePaid`).
