@@ -77,6 +77,7 @@ Five user roles with tailored experiences:
 - Google Fonts must be loaded via `<link>` in `index.html`, NOT via `@import` in CSS (causes PostCSS build error with Tailwind v4).
 - API codegen hook names: `useConvertEstimateToInvoice` (not `useConvertEstimate`), `useMarkInvoicePaid` (not `usePayInvoice`). Always check generated `lib/api-client-react/src/generated/api.ts` for exact names.
 - The analytics estimate counter in estimates.ts is an in-memory counter that resets on server restart. Not a DB sequence.
+- **API double-prefix bug:** Orval-generated hooks already include `/api/` in their paths (e.g. `/api/portfolio`). `setBaseUrl` in `lib/api.ts` must NOT append `/api` — only the Vite `BASE_URL` sub-path (empty string at root). Adding `/api` causes every request to hit `/api/api/…` → 404.
 
 ## Pointers
 

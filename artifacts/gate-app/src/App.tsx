@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "@/lib/api";
 import LoginPage from "@/pages/login";
 import RequestEstimatePage from "@/pages/request-estimate";
+import PortfolioPage from "@/pages/portfolio";
 import DashboardPage from "@/pages/dashboard";
 import EstimatesPage from "@/pages/estimates";
 import InvoicesPage from "@/pages/invoices";
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/" component={AuthRedirect} />
       <Route path="/login" component={LoginPage} />
       <Route path="/request-estimate" component={RequestEstimatePage} />
+      <Route path="/portfolio" component={PortfolioPage} />
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/estimates" component={EstimatesPage} />
       <Route path="/invoices" component={InvoicesPage} />
