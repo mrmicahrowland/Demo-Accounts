@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/gate-project-overview/"
+title = "Automatic Gate & Entryways — Project Overview"
+description = "A presentation introducing Automatic Gate & Entryways’ customer-facing estimate, portfolio, and FAQ pages alongside its role-based field-service operations platform."
+version = "1.0.0"
+id = "artifacts/gate-project-overview"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/gate-project-overview/" ]
+localPort = 18769
+
+[services.development]
+run = "pnpm --filter @workspace/gate-project-overview run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/gate-project-overview", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/gate-project-overview/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18769"
+BASE_PATH = "/gate-project-overview/"
