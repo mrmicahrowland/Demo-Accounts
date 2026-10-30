@@ -53,10 +53,12 @@ router.get("/jobs/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, id));
   if (!job) { res.status(404).json({ error: "Not found" }); return; }
+  const actor = (req as AuthRequest).user!;
+  if (actor.role === "client" && job.clientId !== actor.id || ["crew","supervisor"].includes(actor.role) && job.assignedToId !== actor.id) { res.status(403).json({ error: "Forbidden" }); return; }
   res.json(await enrichJob(job));
 });
 
-router.patch("/jobs/:id", requireAuth, async (req, res): Promise<void> => {
+router.patch("/jobs/:id", requireRole("admin", "manager"), async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [job] = await db.update(jobsTable).set(req.body).where(eq(jobsTable.id, id)).returning();
   if (!job) { res.status(404).json({ error: "Not found" }); return; }
@@ -74,6 +76,10 @@ router.patch("/jobs/:id/status", requireAuth, async (req: AuthRequest, res): Pro
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const { status, notes } = req.body;
   if (!status) { res.status(400).json({ error: "Status required" }); return; }
+  const [existing] = await db.select().from(jobsTable).where(eq(jobsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+  if (!["admin","manager"].includes(req.user!.role) && existing.assignedToId !== req.user!.id) { res.status(403).json({ error: "Forbidden" }); return; }
+  if (!["scheduled","in_progress","paused","completed","cancelled"].includes(status)) { res.status(400).json({ error: "Invalid status" }); return; }
   const updates: Record<string, unknown> = { status };
   if (notes) updates.notes = notes;
   if (status === "completed") updates.completedAt = new Date();
