@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq, ilike, or } from "drizzle-orm";
-import { hashPassword, requireAuth, requireRole, AuthRequest, comparePassword } from "../lib/auth";
+import { hashPassword, requireAuth, requireRole, AuthRequest } from "../lib/auth";
 import { validateFields } from "../lib/validate";
 
 const router = Router();
@@ -68,6 +68,8 @@ router.patch("/users/:id", requireAuth, async (req: AuthRequest, res): Promise<v
   if (Object.keys(rest).some(key => !permitted.includes(key))) { res.status(400).json({ error: "Unauthorized update field" }); return; }
   if (rest.role && !["admin","manager","supervisor","crew","client"].includes(rest.role)) { res.status(400).json({ error: "Invalid role" }); return; }
   if (rest.email && (typeof rest.email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rest.email))) { res.status(400).json({ error: "Invalid email" }); return; }
+  if (rest.hourlyRate !== undefined && (typeof rest.hourlyRate !== "number" && typeof rest.hourlyRate !== "string" || !/^\d{1,8}(\.\d{1,2})?$/.test(String(rest.hourlyRate)))) { res.status(400).json({ error: "Invalid hourly rate" }); return; }
+  if (rest.isActive !== undefined && typeof rest.isActive !== "boolean" || rest.isSupervisor !== undefined && typeof rest.isSupervisor !== "boolean") { res.status(400).json({ error: "Invalid account flags" }); return; }
   const updates: Record<string, unknown> = {};
   for (const key of permitted) if (Object.prototype.hasOwnProperty.call(rest, key)) updates[key] = rest[key];
   if (rest.email) updates.email = rest.email.toLowerCase();
