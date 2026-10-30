@@ -79,8 +79,13 @@ router.patch("/jobs/:id/status", requireAuth, validateFields({ status:"status", 
   if (!status) { res.status(400).json({ error: "Status required" }); return; }
   const [existing] = await db.select().from(jobsTable).where(eq(jobsTable.id, id));
   if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+  if (!["admin","manager","crew","supervisor"].includes(req.user!.role)) { res.status(403).json({ error: "Forbidden" }); return; }
   if (!["admin","manager"].includes(req.user!.role) && existing.assignedToId !== req.user!.id) { res.status(403).json({ error: "Forbidden" }); return; }
   if (!["scheduled","in_progress","paused","completed","cancelled"].includes(status)) { res.status(400).json({ error: "Invalid status" }); return; }
+  if (["crew","supervisor"].includes(req.user!.role)) {
+    const allowed: Record<string, string[]> = { scheduled: ["in_progress"], in_progress: ["paused","completed"], paused: ["in_progress","completed"], completed: [], cancelled: [] };
+    if (!allowed[existing.status]?.includes(status)) { res.status(409).json({ error: "Status transition not permitted" }); return; }
+  }
   const updates: Record<string, unknown> = { status };
   if (notes) updates.notes = notes;
   if (status === "completed") updates.completedAt = new Date();
