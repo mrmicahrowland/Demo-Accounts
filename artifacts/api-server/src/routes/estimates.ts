@@ -3,6 +3,7 @@ import { db, estimatesTable, usersTable, invoicesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, requireRole, AuthRequest } from "../lib/auth";
 
+import { validateFields } from "../lib/validate";
 const router = Router();
 
 let estimateCounter = 1000;
@@ -82,7 +83,7 @@ router.get("/estimates/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(await enrichEstimate(est));
 });
 
-router.patch("/estimates/:id", requireRole("admin", "manager"), async (req, res): Promise<void> => {
+router.patch("/estimates/:id", requireRole("admin", "manager"), validateFields({ status:"optionalText", estimateAmount:"money", siteVisitFee:"money", notes:"optionalText", description:"optionalText", imageUrls:"stringArray", clientId:"optionalId" }), async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [est] = await db.update(estimatesTable).set(req.body).where(eq(estimatesTable.id, id)).returning();
   if (!est) { res.status(404).json({ error: "Not found" }); return; }
