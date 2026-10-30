@@ -17,13 +17,15 @@ export function comparePassword(password: string, hash: string): Promise<boolean
   return bcrypt.compare(password, hash);
 }
 
-export function signToken(payload: { id: number; email: string; role: string }, sessionId?: string): string {
+export function signToken(payload: { id: number; email: string; role: string }, sessionId: string): string {
   return jwt.sign({ ...payload, sid: sessionId }, JWT_SECRET, { expiresIn: "15m" });
 }
 
-export function verifyToken(token: string): { id: number; email: string; role: string; sid?: string } | null {
+export function verifyToken(token: string): { id: number; email: string; role: string; sid: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { id: number; email: string; role: string; sid?: string };
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (!payload || typeof payload !== "object" || !Number.isSafeInteger(payload.id) || typeof payload.sid !== "string" || !/^[0-9a-f-]{36}$/i.test(payload.sid)) return null;
+    return payload as { id: number; email: string; role: string; sid: string };
   } catch {
     return null;
   }
@@ -45,7 +47,7 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
     res.status(401).json({ error: "Invalid or expired token" });
     return;
   }
-  if (payload.sid) {
+  {
     const [session] = await db.select().from(authSessionsTable).where(and(eq(authSessionsTable.id, payload.sid), eq(authSessionsTable.userId, payload.id), isNull(authSessionsTable.revokedAt), gt(authSessionsTable.expiresAt, new Date())));
     if (!session) { res.status(401).json({ error: "Session revoked" }); return; }
   }
