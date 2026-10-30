@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { hashPassword, comparePassword, signToken, requireAuth, AuthRequest } from "../lib/auth";
 
 import { rateLimit } from "../lib/rate-limit";
+import { createSession, rotateSession, revokeSession } from "../lib/session";
 
 const router = Router();
 
@@ -25,7 +26,8 @@ router.post("/auth/login", rateLimit(8, 900000), async (req, res): Promise<void>
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
-  const token = signToken({ id: user.id, email: user.email, role: user.role });
+  const sessionId = await createSession(user.id, res);
+  const token = signToken({ id: user.id, email: user.email, role: user.role }, sessionId);
   const { passwordHash: _, ...safeUser } = user;
   res.json({ token, user: { ...safeUser, hourlyRate: safeUser.hourlyRate ? parseFloat(safeUser.hourlyRate) : null } });
 });
@@ -51,7 +53,8 @@ router.post("/auth/register", rateLimit(5, 3600000), async (req, res): Promise<v
     phone: phone ?? null,
     role: "client",
   }).returning();
-  const token = signToken({ id: user.id, email: user.email, role: user.role });
+  const sessionId = await createSession(user.id, res);
+  const token = signToken({ id: user.id, email: user.email, role: user.role }, sessionId);
   const { passwordHash: _, ...safeUser } = user;
   res.status(201).json({ token, user: { ...safeUser, hourlyRate: null } });
 });
@@ -66,7 +69,17 @@ router.get("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<void>
   res.json({ ...safeUser, hourlyRate: safeUser.hourlyRate ? parseFloat(safeUser.hourlyRate) : null });
 });
 
-router.post("/auth/logout", (_req, res): void => {
+router.post("/auth/refresh", rateLimit(30, 900000), async (req, res): Promise<void> => {
+  const session = await rotateSession(req, res);
+  if (!session) { res.status(401).json({ error: "Refresh session expired or revoked" }); return; }
+  const { user, sessionId } = session;
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ token: signToken({ id: user.id, email: user.email, role: user.role }, sessionId) });
+});
+
+router.post("/auth/logout", async (req: AuthRequest, res): Promise<void> => {
+  await revokeSession(req, res);
+  res.setHeader("Cache-Control", "no-store");
   res.json({ success: true });
 });
 
