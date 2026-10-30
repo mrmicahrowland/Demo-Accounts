@@ -3,6 +3,7 @@ import { db, invoicesTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, requireRole, AuthRequest } from "../lib/auth";
 
+import { validateFields } from "../lib/validate";
 const router = Router();
 
 async function enrichInvoice(inv: typeof invoicesTable.$inferSelect) {
@@ -53,12 +54,14 @@ router.get("/invoices/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [inv] = await db.select().from(invoicesTable).where(eq(invoicesTable.id, id));
   if (!inv) { res.status(404).json({ error: "Not found" }); return; }
+  const actor = (req as AuthRequest).user!;
+  if (actor.role === "client" && inv.clientId !== actor.id) { res.status(403).json({ error: "Forbidden" }); return; }
   res.json(await enrichInvoice(inv));
 });
 
-router.patch("/invoices/:id", requireRole("admin", "manager"), async (req, res): Promise<void> => {
+router.patch("/invoices/:id", requireRole("admin", "manager"), validateFields({ amount:"money", lineItems:"lineItems", dueDate:"optionalText", notes:"optionalText", estimateId:"optionalId", jobId:"optionalId" }), async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
-  const updates = { ...req.body };
+  const { status: _status, amountPaid: _amountPaid, paidAt: _paidAt, clientId: _clientId, ...updates } = req.body;
   if (updates.amount) updates.amount = updates.amount.toString();
   if (updates.amountPaid) updates.amountPaid = updates.amountPaid.toString();
   const [inv] = await db.update(invoicesTable).set(updates).where(eq(invoicesTable.id, id)).returning();
@@ -66,6 +69,11 @@ router.patch("/invoices/:id", requireRole("admin", "manager"), async (req, res):
   res.json(await enrichInvoice(inv));
 });
 
+router.patch("/invoices/:id/pay", requireAuth, async (_req, res): Promise<void> => {
+  res.status(409).json({ error: "Payment status requires verified provider webhook; direct payment marking disabled" });
+});
+
+/* Legacy unsafe direct payment route removed.
 router.patch("/invoices/:id/pay", requireRole("admin", "manager", "client"), async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [inv] = await db.select().from(invoicesTable).where(eq(invoicesTable.id, id));
@@ -78,4 +86,5 @@ router.patch("/invoices/:id/pay", requireRole("admin", "manager", "client"), asy
   res.json(await enrichInvoice(updated));
 });
 
+*/
 export default router;

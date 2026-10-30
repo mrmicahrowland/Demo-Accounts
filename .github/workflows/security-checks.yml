@@ -1,0 +1,46 @@
+name: Security checks
+on:
+  pull_request:
+  push:
+    branches: [security-hardening-2026-10]
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    env:
+      SESSION_SECRET: ci-only-32-character-minimum-secret-value
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/security_ci
+      CORS_ORIGINS: http://localhost:3000
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: security_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+      - run: pnpm --filter @workspace/api-server run build
+      - name: Unit and source-contract security tests
+        run: pnpm exec tsx --test artifacts/api-server/src/__tests__/security.test.ts
+      - name: Database schema migration smoke test
+        run: |
+          pnpm --filter @workspace/db run push
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/migrations/0001_auth_sessions.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/migrations/0002_audit_logs.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SELECT id, user_id, refresh_hash, expires_at, revoked_at FROM auth_sessions LIMIT 0"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SELECT actor_id, action, status_code, created_at FROM audit_logs LIMIT 0"
