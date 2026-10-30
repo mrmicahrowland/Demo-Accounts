@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
+import { auditMiddleware } from "./lib/audit";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -35,6 +36,7 @@ app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+app.use(auditMiddleware);
 app.use("/api", router);
 
 export default app;
