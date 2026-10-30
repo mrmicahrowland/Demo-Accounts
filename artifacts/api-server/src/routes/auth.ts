@@ -7,7 +7,8 @@ import { hashPassword, comparePassword, signToken, requireAuth, AuthRequest } fr
 const router = Router();
 
 router.post("/auth/login", async (req, res): Promise<void> => {
-  const { email, password } = req.body;
+  const { email, password } = req.body ?? {};
+  if (typeof email !== "string" || typeof password !== "string" || email.length > 254 || password.length > 1024) { res.status(400).json({ error: "Invalid credentials format" }); return; }
   if (!email || !password) {
     res.status(400).json({ error: "Email and password required" });
     return;
@@ -28,7 +29,8 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 });
 
 router.post("/auth/register", async (req, res): Promise<void> => {
-  const { email, password, firstName, lastName, phone } = req.body;
+  const { email, password, firstName, lastName, phone } = req.body ?? {};
+  if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || typeof password !== "string" || password.length < 12 || password.length > 128 || typeof firstName !== "string" || typeof lastName !== "string" || firstName.length > 100 || lastName.length > 100 || (phone != null && (typeof phone !== "string" || phone.length > 40))) { res.status(400).json({ error: "Invalid registration fields" }); return; }
   if (!email || !password || !firstName || !lastName) {
     res.status(400).json({ error: "Missing required fields" });
     return;
@@ -54,7 +56,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
 router.get("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.id));
-  if (!user) {
+  if (!user || !user.isActive) {
     res.status(401).json({ error: "User not found" });
     return;
   }
