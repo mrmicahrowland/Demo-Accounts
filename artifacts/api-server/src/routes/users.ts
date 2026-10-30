@@ -49,13 +49,17 @@ router.get("/users/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  if (req.user!.role === "client" && req.user!.id !== id) { res.status(403).json({ error: "Forbidden" }); return; }
   res.json(safeUser(user));
 });
 
 router.patch("/users/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  if (req.user!.id !== id && !["admin", "manager"].includes(req.user!.role)) { res.status(403).json({ error: "Forbidden" }); return; }
   const { password, ...rest } = req.body;
-  const updates: Record<string, unknown> = { ...rest };
+  const permitted = req.user!.role === "admin" ? ["firstName","lastName","email","phone","role","isActive","isSupervisor","hourlyRate"] : ["firstName","lastName","email","phone"];
+  const updates: Record<string, unknown> = {};
+  for (const key of permitted) if (Object.prototype.hasOwnProperty.call(rest, key)) updates[key] = rest[key];
   if (password) updates.passwordHash = await hashPassword(password);
   if (rest.email) updates.email = rest.email.toLowerCase();
   const [user] = await db.update(usersTable).set(updates).where(eq(usersTable.id, id)).returning();
