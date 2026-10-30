@@ -48,3 +48,19 @@ test("migration: session and audit tables have required safety columns", () => {
   for (const col of ["refresh_hash", "expires_at", "revoked_at", "user_id"]) assert.match(session, new RegExp(col));
   for (const col of ["actor_id", "action", "status_code", "created_at"]) assert.match(audit, new RegExp(col));
 });
+
+test("frontend session contract: refresh cookie, memory tokens, and logout", () => {
+  const root = process.cwd();
+  const api = readFileSync(resolve(root, "artifacts/gate-app/src/lib/api.ts"), "utf8");
+  const auth = readFileSync(resolve(root, "artifacts/gate-app/src/hooks/use-auth.ts"), "utf8");
+  const transport = readFileSync(resolve(root, "lib/api-client-react/src/custom-fetch.ts"), "utf8");
+  assert.match(api, /credentials: "include"/);
+  assert.match(api, /let accessToken: string \| null = null/);
+  assert.match(api, /refreshInFlight/);
+  assert.match(auth, /setAccessToken\(response\.token\)/);
+  assert.match(auth, /clearAccessToken\(\)/);
+  assert.match(auth, /api\/auth\/logout/);
+  assert.doesNotMatch(auth + api, /localStorage\.(getItem|setItem)\(["']auth_(token|user)/);
+  assert.match(transport, /_forceRefresh/);
+  assert.match(transport, /response\.status === 401/);
+});
