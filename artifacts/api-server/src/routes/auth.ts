@@ -4,9 +4,11 @@ import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { hashPassword, comparePassword, signToken, requireAuth, AuthRequest } from "../lib/auth";
 
+import { rateLimit } from "../lib/rate-limit";
+
 const router = Router();
 
-router.post("/auth/login", async (req, res): Promise<void> => {
+router.post("/auth/login", rateLimit(8, 900000), async (req, res): Promise<void> => {
   const { email, password } = req.body ?? {};
   if (typeof email !== "string" || typeof password !== "string" || email.length > 254 || password.length > 1024) { res.status(400).json({ error: "Invalid credentials format" }); return; }
   if (!email || !password) {
@@ -28,7 +30,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   res.json({ token, user: { ...safeUser, hourlyRate: safeUser.hourlyRate ? parseFloat(safeUser.hourlyRate) : null } });
 });
 
-router.post("/auth/register", async (req, res): Promise<void> => {
+router.post("/auth/register", rateLimit(5, 3600000), async (req, res): Promise<void> => {
   const { email, password, firstName, lastName, phone } = req.body ?? {};
   if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || typeof password !== "string" || password.length < 12 || password.length > 128 || typeof firstName !== "string" || typeof lastName !== "string" || firstName.length > 100 || lastName.length > 100 || (phone != null && (typeof phone !== "string" || phone.length > 40))) { res.status(400).json({ error: "Invalid registration fields" }); return; }
   if (!email || !password || !firstName || !lastName) {
