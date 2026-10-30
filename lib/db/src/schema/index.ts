@@ -9,3 +9,4 @@ export * from "./newsletter";
 export * from "./notifications";
 export * from "./settings";
 export * from "./time_entries";
+export * from "./auth_sessions";
