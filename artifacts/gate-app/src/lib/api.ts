@@ -1,4 +1,4 @@
-import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
+import { setBaseUrl, setAuthTokenGetter, setAuthRefreshHandler } from "@workspace/api-client-react";
 
 const base = import.meta.env.BASE_URL ?? "/";
 const basePath = base === "/" ? "" : base.replace(/\\/+$/, "");
@@ -15,8 +15,8 @@ export function setAccessToken(token: string | null) {
   if (!token) refreshInFlight = null;
 }
 
-export async function refreshAccessToken(): Promise<string | null> {
-  if (accessToken) return accessToken;
+export async function refreshAccessToken(force = false): Promise<string | null> {
+  if (accessToken && !force) return accessToken;
   if (refreshInFlight) return refreshInFlight;
   const currentGeneration = generation;
   const promise = (async () => {
@@ -40,4 +40,5 @@ export async function refreshAccessToken(): Promise<string | null> {
 }
 
 export function clearAccessToken() { setAccessToken(null); }
-setAuthTokenGetter(refreshAccessToken);
+setAuthTokenGetter(() => refreshAccessToken());
+setAuthRefreshHandler(() => refreshAccessToken(true));
