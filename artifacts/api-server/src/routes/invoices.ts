@@ -3,6 +3,7 @@ import { db, invoicesTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, requireRole, AuthRequest } from "../lib/auth";
 
+import { validateFields } from "../lib/validate";
 const router = Router();
 
 async function enrichInvoice(inv: typeof invoicesTable.$inferSelect) {
@@ -58,7 +59,7 @@ router.get("/invoices/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(await enrichInvoice(inv));
 });
 
-router.patch("/invoices/:id", requireRole("admin", "manager"), async (req, res): Promise<void> => {
+router.patch("/invoices/:id", requireRole("admin", "manager"), validateFields({ amount:"money", lineItems:"lineItems", dueDate:"optionalText", notes:"optionalText", estimateId:"optionalId", jobId:"optionalId" }), async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const { status: _status, amountPaid: _amountPaid, paidAt: _paidAt, clientId: _clientId, ...updates } = req.body;
   if (updates.amount) updates.amount = updates.amount.toString();
