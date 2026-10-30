@@ -42,7 +42,7 @@ test("audit: middleware does not log read-only requests", () => {
   assert.equal(nextCalled, true);
 });
 test("migration: session and audit tables have required safety columns", () => {
-  const root = resolve(process.cwd(), "../../");
+  const root = process.cwd();
   const session = readFileSync(resolve(root, "lib/db/migrations/0001_auth_sessions.sql"), "utf8");
   const audit = readFileSync(resolve(root, "lib/db/migrations/0002_audit_logs.sql"), "utf8");
   for (const col of ["refresh_hash", "expires_at", "revoked_at", "user_id"]) assert.match(session, new RegExp(col));
