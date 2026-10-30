@@ -2,7 +2,10 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { Request, Response, NextFunction } from "express";
 
-const JWT_SECRET = process.env.SESSION_SECRET ?? "fallback-secret-change-in-production";
+const JWT_SECRET = process.env.SESSION_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error("SESSION_SECRET must be configured with at least 32 characters");
+}
 
 export function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
@@ -13,7 +16,7 @@ export function comparePassword(password: string, hash: string): Promise<boolean
 }
 
 export function signToken(payload: { id: number; email: string; role: string }): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "15m" });
 }
 
 export function verifyToken(token: string): { id: number; email: string; role: string } | null {
