@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -26,10 +27,11 @@ app.use(
   }),
 );
 const allowedOrigins = (process.env.CORS_ORIGINS ?? "").split(",").map(x => x.trim()).filter(Boolean);
-app.use(cors({ origin(origin, callback) {
+app.use(cors({ credentials: true, origin(origin, callback) {
   if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
   callback(new Error("CORS origin denied"));
 } }));
+app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
