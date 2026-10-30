@@ -3,6 +3,7 @@ import { db, jobsTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, requireRole, AuthRequest } from "../lib/auth";
 
+import { validateFields } from "../lib/validate";
 const router = Router();
 
 async function enrichJob(job: typeof jobsTable.$inferSelect) {
@@ -58,7 +59,7 @@ router.get("/jobs/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(await enrichJob(job));
 });
 
-router.patch("/jobs/:id", requireRole("admin", "manager"), async (req, res): Promise<void> => {
+router.patch("/jobs/:id", requireRole("admin", "manager"), validateFields({ title:"text", description:"optionalText", priority:"priority", propertyAddress:"optionalText", city:"optionalText", state:"optionalText", scheduledDate:"optionalText", scheduledTime:"optionalText", gateType:"optionalText", notes:"optionalText", photoUrls:"stringArray" }), async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [job] = await db.update(jobsTable).set(req.body).where(eq(jobsTable.id, id)).returning();
   if (!job) { res.status(404).json({ error: "Not found" }); return; }
@@ -72,7 +73,7 @@ router.delete("/jobs/:id", requireRole("admin", "manager"), async (req, res): Pr
   res.sendStatus(204);
 });
 
-router.patch("/jobs/:id/status", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+router.patch("/jobs/:id/status", requireAuth, validateFields({ status:"status", notes:"optionalText" }, ["status"]), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const { status, notes } = req.body;
   if (!status) { res.status(400).json({ error: "Status required" }); return; }
@@ -88,7 +89,7 @@ router.patch("/jobs/:id/status", requireAuth, async (req: AuthRequest, res): Pro
   res.json(await enrichJob(job));
 });
 
-router.patch("/jobs/:id/assign", requireRole("admin", "manager"), async (req, res): Promise<void> => {
+router.patch("/jobs/:id/assign", requireRole("admin", "manager"), validateFields({ assignedToId:"id", scheduledDate:"optionalText", scheduledTime:"optionalText" }, ["assignedToId"]), async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const { assignedToId, scheduledDate, scheduledTime } = req.body;
   if (!assignedToId) { res.status(400).json({ error: "assignedToId required" }); return; }
