@@ -10,6 +10,7 @@ export function useAuth() {
   const [, setLocation] = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
   const { data: serverUser, isLoading: isLoadingUser } = useGetCurrentUser({
     query: { queryKey: getGetCurrentUserQueryKey(), enabled: ready, retry: false },
   });
@@ -19,12 +20,13 @@ export function useAuth() {
     return () => { active = false; };
   }, []);
   useEffect(() => {
-    if (serverUser) setUser(serverUser);
-  }, [serverUser]);
+    if (serverUser && !signedOut) setUser(serverUser);
+  }, [serverUser, signedOut]);
   const loginMutation = useLogin();
   const registerMutation = useRegister();
   const login = useCallback(async (credentials: LoginInput) => {
     const response = await loginMutation.mutateAsync({ data: credentials });
+    setSignedOut(false);
     setAccessToken(response.token);
     setUser(response.user);
     queryClient.setQueryData(getGetCurrentUserQueryKey(), response.user);
@@ -45,6 +47,7 @@ export function useAuth() {
         method: "POST", credentials: "include",
       });
     } finally {
+      setSignedOut(true);
       clearAccessToken();
       setUser(null);
       queryClient.clear();
@@ -52,9 +55,9 @@ export function useAuth() {
     }
   }, [queryClient, setLocation]);
   return {
-    user: serverUser ?? user,
+    user: signedOut ? null : (serverUser ?? user),
     isLoading: !ready || (isLoadingUser && !user),
-    isAuthenticated: !!(serverUser ?? user),
+    isAuthenticated: !signedOut && !!(serverUser ?? user),
     login, register, logout,
     isLoggingIn: loginMutation.isPending,
     isRegistering: registerMutation.isPending,
