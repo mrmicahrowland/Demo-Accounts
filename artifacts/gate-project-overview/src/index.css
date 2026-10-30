@@ -1,25 +1,22 @@
 @import 'tailwindcss';
 
 @theme inline {
-  --color-primary: var(--slide-primary);
+  --color-background: var(--slide-background);
+  --color-surface: var(--slide-surface);
+  --color-foreground: var(--slide-foreground);
   --color-accent: var(--slide-accent);
-  --color-bg: var(--slide-bg);
-  --color-text: var(--slide-text);
-  --color-muted: var(--slide-muted);
   --font-display: var(--font-display-family);
   --font-body: var(--font-body-family);
 }
 
 :root {
-  /* Replace these with brand colors */
-  --slide-primary: #4f46e5;
-  --slide-accent: #06b6d4;
-  --slide-bg: #f8fafc;
-  --slide-text: #0f172a;
-  --slide-muted: #64748b;
-  --font-display-family: 'Inter', system-ui, sans-serif;
-  --font-body-family: 'Inter', system-ui, sans-serif;
-  color-scheme: light;
+  --slide-background: #111111;
+  --slide-surface: #1C1C1C;
+  --slide-foreground: #F9F9FB;
+  --slide-accent: #C9A84C;
+  --font-display-family: 'Playfair Display', Georgia, serif;
+  --font-body-family: 'Inter', Arial, sans-serif;
+  color-scheme: dark;
 }
 
 html,
@@ -31,14 +28,33 @@ body,
 }
 
 body {
-  background: var(--slide-bg);
-  color: var(--slide-text);
+  background: var(--slide-background);
+  color: var(--slide-foreground);
+  font-family: var(--font-body-family);
 }
 
-.slide {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+.gate-slat-field {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 4.2vh,
+    rgba(201, 168, 76, 0.65) 4.2vh,
+    rgba(201, 168, 76, 0.65) 4.45vh
+  );
+  border-left: 0.2vw solid rgba(201, 168, 76, 0.45);
+  border-right: 0.2vw solid rgba(201, 168, 76, 0.45);
+}
+
+.gate-slat-dark {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 4.2vh,
+    rgba(17, 17, 17, 0.72) 4.2vh,
+    rgba(17, 17, 17, 0.72) 4.45vh
+  );
+  border-left: 0.2vw solid rgba(17, 17, 17, 0.45);
+  border-right: 0.2vw solid rgba(17, 17, 17, 0.45);
 }
 
 .slide-viewer {

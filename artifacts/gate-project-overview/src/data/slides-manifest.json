@@ -1,1 +1,74 @@
-[]
+[
+  {
+    "id": "10000000-0000-4000-8000-000000000001",
+    "position": 1,
+    "filepath": "src/pages/slides/Cover.tsx",
+    "title": "Automatic Gate & Entryways",
+    "description": "Project introduction and platform summary",
+    "speakerNotes": ""
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000002",
+    "position": 2,
+    "filepath": "src/pages/slides/EndToEnd.tsx",
+    "title": "A service business, supported end to end",
+    "description": "Estimate, invoice, job, team, and client workflow",
+    "speakerNotes": ""
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000003",
+    "position": 3,
+    "filepath": "src/pages/slides/EstimateToField.tsx",
+    "title": "From estimate to field work",
+    "description": "Estimate-to-field service process",
+    "speakerNotes": ""
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000004",
+    "position": 4,
+    "filepath": "src/pages/slides/EveryRole.tsx",
+    "title": "The right experience for every role",
+    "description": "Role-specific experiences",
+    "speakerNotes": ""
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000005",
+    "position": 5,
+    "filepath": "src/pages/slides/PublicPages.tsx",
+    "title": "A public front door for customers",
+    "description": "Customer-facing public pages",
+    "speakerNotes": ""
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000006",
+    "position": 6,
+    "filepath": "src/pages/slides/EstimateRequest.tsx",
+    "title": "A guided estimate request",
+    "description": "Four-step estimate request flow",
+    "speakerNotes": ""
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000007",
+    "position": 7,
+    "filepath": "src/pages/slides/PortfolioFaq.tsx",
+    "title": "Show the work. Answer questions.",
+    "description": "Portfolio and searchable FAQ experience",
+    "speakerNotes": ""
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000008",
+    "position": 8,
+    "filepath": "src/pages/slides/ClientPortal.tsx",
+    "title": "A client portal for the next steps",
+    "description": "Client visibility into estimates, invoices, and job status",
+    "speakerNotes": ""
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000009",
+    "position": 9,
+    "filepath": "src/pages/slides/ClearPath.tsx",
+    "title": "One clear path from request to completed work",
+    "description": "Closing summary of the connected customer and service journey",
+    "speakerNotes": ""
+  }
+]
