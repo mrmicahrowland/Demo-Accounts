@@ -17,6 +17,8 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _forceRefresh: (() => Promise<string | null>) | null = null;
+export function setAuthRefreshHandler(handler: (() => Promise<string | null>) | null): void { _forceRefresh = handler; }
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -360,7 +362,15 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  let response = await fetch(input, { ...init, credentials: init.credentials ?? "include", method, headers });
+  const isAuthEndpoint = /\\/api\\/auth\\/(login|register|refresh|logout)(?:\\?|$)/.test(requestInfo.url);
+  if (response.status === 401 && !isAuthEndpoint && _forceRefresh && _authTokenGetter) {
+    const refreshed = await _forceRefresh();
+    if (refreshed) {
+      headers.set("authorization", `Bearer ${refreshed}`);
+      response = await fetch(input, { ...init, credentials: init.credentials ?? "include", method, headers });
+    }
+  }
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
