@@ -47,9 +47,16 @@ export async function rotateSession(req: Request, res: Response) {
   return { sessionId: id, user };
 }
 
-export async function revokeSession(req: Request, res: Response, sessionId?: string) {
+export async function revokeSession(req: Request, res: Response) {
   const cookie = req.cookies?.[COOKIE];
-  const id = sessionId ?? (typeof cookie === "string" ? cookie.split(".")[0] : undefined);
-  if (id) await db.update(authSessionsTable).set({ revokedAt: new Date() }).where(eq(authSessionsTable.id, id));
+  if (typeof cookie === "string") {
+    const [id, secret, extra] = cookie.split(".");
+    if (id && secret && !extra && secret.length >= 40) {
+      // Revocation requires the current refresh secret, not merely a session ID.
+      await db.update(authSessionsTable).set({ revokedAt: new Date() })
+        .where(and(eq(authSessionsTable.id, id), eq(authSessionsTable.refreshHash, hash(secret)),
+          isNull(authSessionsTable.revokedAt), gt(authSessionsTable.expiresAt, new Date())));
+    }
+  }
   res.clearCookie(COOKIE, { path: cookieOptions.path, sameSite: cookieOptions.sameSite, secure: cookieOptions.secure, httpOnly: true });
 }
