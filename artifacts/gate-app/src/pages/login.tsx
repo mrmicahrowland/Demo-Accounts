@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { getRoleHomeRoute } from "@/lib/role-home";
 import { Eye, EyeOff, ShieldCheck, ChevronRight } from "lucide-react";
 
 const DEMO_ACCOUNTS = [
@@ -16,17 +17,6 @@ const DEMO_ACCOUNTS = [
   { role: "Crew", email: "crew@automaticgate.com", password: "crew123", color: "bg-green-500/20 text-green-400 border-green-500/30", description: "Job assignments" },
   { role: "Client", email: "client@automaticgate.com", password: "client123", color: "bg-gray-500/20 text-gray-300 border-gray-500/30", description: "Client portal" },
 ];
-
-function getRoleRedirect(role: string): string {
-  switch (role) {
-    case "admin": return "/dashboard";
-    case "manager": return "/dashboard";
-    case "supervisor": return "/jobs";
-    case "crew": return "/jobs";
-    case "client": return "/client/estimates";
-    default: return "/dashboard";
-  }
-}
 
 export default function LoginPage() {
   const { login, isLoggingIn } = useAuth();
@@ -40,7 +30,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const response = await login({ email, password });
-      setLocation(getRoleRedirect(response.user.role));
+      setLocation(getRoleHomeRoute(response.user.role));
     } catch {
       toast({ title: "Login failed", description: "Invalid email or password.", variant: "destructive" });
     }
@@ -49,7 +39,7 @@ export default function LoginPage() {
   async function handleDemoLogin(demoEmail: string, demoPassword: string) {
     try {
       const response = await login({ email: demoEmail, password: demoPassword });
-      setLocation(getRoleRedirect(response.user.role));
+      setLocation(getRoleHomeRoute(response.user.role));
     } catch {
       toast({ title: "Demo login failed", description: "Please try again.", variant: "destructive" });
     }

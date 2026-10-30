@@ -19,6 +19,7 @@ import { ClientEstimatesPage, ClientInvoicesPage, ClientJobsPage } from "@/pages
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { getRoleHomeRoute } from "@/lib/role-home";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,10 +36,7 @@ function AuthRedirect() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      const role = user.role;
-      if (role === "client") setLocation("/client/estimates");
-      else if (role === "crew" || role === "supervisor") setLocation("/jobs");
-      else setLocation("/dashboard");
+      setLocation(getRoleHomeRoute(user.role));
     } else if (!isLoading && !isAuthenticated) {
       setLocation("/login");
     }

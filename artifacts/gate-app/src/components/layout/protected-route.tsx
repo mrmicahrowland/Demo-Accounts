@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { getRoleHomeRoute } from "@/lib/role-home";
 
 interface ProtectedRouteProps {
   roles?: string[];
@@ -16,12 +17,7 @@ export function ProtectedRoute({ roles, children }: ProtectedRouteProps) {
       setLocation("/login");
     } else if (!isLoading && isAuthenticated && roles && roles.length > 0) {
       if (!roles.includes(user?.role || "")) {
-        // Redirect to their appropriate dashboard if wrong role
-        if (user?.role === "admin") setLocation("/admin");
-        else if (user?.role === "manager") setLocation("/manager");
-        else if (user?.role === "supervisor") setLocation("/supervisor");
-        else if (user?.role === "crew") setLocation("/crew");
-        else setLocation("/client");
+        setLocation(getRoleHomeRoute(user?.role ?? ""));
       }
     }
   }, [isLoading, isAuthenticated, user, roles, setLocation]);
