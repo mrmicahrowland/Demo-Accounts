@@ -1,7 +1,7 @@
 import { setBaseUrl, setAuthTokenGetter, setAuthRefreshHandler } from "@workspace/api-client-react";
 
 const base = import.meta.env.BASE_URL ?? "/";
-const basePath = base === "/" ? "" : base.replace(/\\/+$/, "");
+const basePath = base === "/" ? "" : base.replace(/\/+$/, "");
 setBaseUrl(basePath || null);
 
 // Access tokens are never persisted. The HttpOnly refresh cookie is browser-managed.

@@ -363,7 +363,7 @@ export async function customFetch<T = unknown>(
   const requestInfo = { method, url: resolveUrl(input) };
 
   let response = await fetch(input, { ...init, credentials: init.credentials ?? "include", method, headers });
-  const isAuthEndpoint = /\\/api\\/auth\\/(login|register|refresh|logout)(?:\\?|$)/.test(requestInfo.url);
+  const isAuthEndpoint = /\/api\/auth\/(login|register|refresh|logout)(?:\?|$)/.test(requestInfo.url);
   if (response.status === 401 && !isAuthEndpoint && _forceRefresh && _authTokenGetter) {
     const refreshed = await _forceRefresh();
     if (refreshed) {

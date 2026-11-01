@@ -30,7 +30,9 @@ app.use(
 const allowedOrigins = (process.env.CORS_ORIGINS ?? "").split(",").map(x => x.trim()).filter(Boolean);
 app.use(cors({ credentials: true, origin(origin, callback) {
   if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-  callback(new Error("CORS origin denied"));
+  // Omit CORS headers for unapproved origins; same-origin preview requests
+  // do not need them, and a denied origin should not turn into a server error.
+  callback(null, false);
 } }));
 app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));

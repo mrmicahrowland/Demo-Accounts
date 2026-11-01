@@ -43,7 +43,7 @@ export function useAuth() {
   }, [registerMutation, queryClient]);
   const logout = useCallback(async () => {
     try {
-      await fetch((import.meta.env.BASE_URL === "/" ? "" : import.meta.env.BASE_URL.replace(/\\/$/, "")) + "/api/auth/logout", {
+      await fetch((import.meta.env.BASE_URL === "/" ? "" : import.meta.env.BASE_URL.replace(/\/$/, "")) + "/api/auth/logout", {
         method: "POST", credentials: "include",
       });
     } finally {

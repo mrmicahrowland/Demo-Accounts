@@ -18,12 +18,12 @@ export function comparePassword(password: string, hash: string): Promise<boolean
 }
 
 export function signToken(payload: { id: number; email: string; role: string }, sessionId: string): string {
-  return jwt.sign({ ...payload, sid: sessionId }, JWT_SECRET, { expiresIn: "15m" });
+  return jwt.sign({ ...payload, sid: sessionId }, JWT_SECRET!, { expiresIn: "15m" });
 }
 
 export function verifyToken(token: string): { id: number; email: string; role: string; sid: string } | null {
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET!) as jwt.JwtPayload;
     if (!payload || typeof payload !== "object" || !Number.isSafeInteger(payload.id) || typeof payload.sid !== "string" || !/^[0-9a-f-]{36}$/i.test(payload.sid)) return null;
     return payload as { id: number; email: string; role: string; sid: string };
   } catch {
