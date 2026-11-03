@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "@/lib/api";
 import LoginPage from "@/pages/login";
+import { ClientProfilePage, ClientServiceRequestsPage } from "@/pages/client-profile-requests";
 import RequestEstimatePage from "@/pages/request-estimate";
 import PortfolioPage from "@/pages/portfolio";
 import FaqPage from "@/pages/faq";
@@ -67,6 +68,8 @@ function Router() {
       <Route path="/client/estimates" component={ClientEstimatesPage} />
       <Route path="/client/invoices" component={ClientInvoicesPage} />
       <Route path="/client/jobs" component={ClientJobsPage} />
+      <Route path="/client/profile" component={ClientProfilePage} />
+      <Route path="/client/service-requests" component={ClientServiceRequestsPage} />
       <Route component={NotFound} />
     </Switch>
   );
