@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { db, clientAddressesTable, guestServiceRequestsTable, termsVersionsTable, termsAcceptancesTable, emailChangeRequestsTable, usersTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
-import { randomBytes, createHash } from "node:crypto";
 import { requireAuth, requireRole, AuthRequest } from "../lib/auth";
 import { rateLimit } from "../lib/rate-limit";
 const router = Router();
@@ -50,9 +49,7 @@ router.post("/client/email-change",requireAuth,rateLimit(3,3600000),async(req:Au
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254){res.status(400).json({error:"Invalid email"});return;}
  const [existing]=await db.select({id:usersTable.id}).from(usersTable).where(eq(usersTable.email,email));
  if(existing){res.status(409).json({error:"Email unavailable"});return;}
- const token=randomBytes(32).toString("hex");const tokenHash=createHash("sha256").update(token).digest("hex");
- await db.insert(emailChangeRequestsTable).values({userId:req.user!.id,newEmail:email,tokenHash,expiresAt:new Date(Date.now()+30*60*1000)});
- // Never return the token in an API response. An email delivery adapter must send it before this feature can be enabled.
+ // No verification token is generated until a secure email delivery provider is configured.
  res.status(503).json({error:"Email verification delivery is not configured; no email change was made"});
 });
 router.post("/public/service-requests",rateLimit(3,3600000),async(req,res):Promise<void>=>{
