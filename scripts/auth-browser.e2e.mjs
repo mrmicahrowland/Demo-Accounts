@@ -9,8 +9,9 @@ const browser = await chromium.launch({ headless: true });
 try {
   const context = await browser.newContext({ baseURL: origin });
   const page = await context.newPage();
+  const terms = await (await context.request.get("/api/public/terms")).json();
   const registered = await context.request.post("/api/auth/register", {
-    data: { email, password, firstName: "Browser", lastName: "Tester" },
+    data: { email, password, firstName: "Browser", lastName: "Tester", acceptTerms: true, termsVersionId: terms.id },
   });
   assert.equal(registered.status(), 201, "test user registration");
   // The browser must authenticate through the UI, not the API request context.
