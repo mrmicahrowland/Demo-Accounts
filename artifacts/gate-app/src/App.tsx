@@ -6,6 +6,7 @@ import "@/lib/api";
 import LoginPage from "@/pages/login";
 import { ClientProfilePage, ClientServiceRequestsPage } from "@/pages/client-profile-requests";
 import RequestEstimatePage from "@/pages/request-estimate";
+import GuestServiceRequestPage from "@/pages/guest-service-request";
 import PortfolioPage from "@/pages/portfolio";
 import FaqPage from "@/pages/faq";
 import DashboardPage from "@/pages/dashboard";
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/" component={AuthRedirect} />
       <Route path="/login" component={LoginPage} />
       <Route path="/request-estimate" component={RequestEstimatePage} />
+      <Route path="/request-service" component={GuestServiceRequestPage} />
       <Route path="/portfolio" component={PortfolioPage} />
       <Route path="/faq" component={FaqPage} />
       <Route path="/dashboard" component={DashboardPage} />
