@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, clientAddressesTable, guestServiceRequestsTable, termsVersionsTable, termsAcceptancesTable, emailChangeRequestsTable, usersTable } from "@workspace/db";
+import { db, clientAddressesTable, guestServiceRequestsTable, termsVersionsTable, termsAcceptancesTable, usersTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth, requireRole, AuthRequest } from "../lib/auth";
 import { rateLimit } from "../lib/rate-limit";
@@ -13,11 +13,11 @@ router.get("/client/addresses", requireAuth, async (req: AuthRequest,res) => {
 });
 router.post("/client/addresses", requireAuth, async (req: AuthRequest,res): Promise<void> => {
  if (!validAddress(req.body)) {res.status(400).json({error:"Invalid address"});return;}
- const [row]=await db.insert(clientAddressesTable).values({...req.body,clientId:req.user!.id}).returning();res.status(201).json(row);
+ const [row]=await db.insert(clientAddressesTable).values({label:req.body.label??"Service address",address:req.body.address,city:req.body.city,state:req.body.state,zip:req.body.zip,clientId:req.user!.id}).returning();res.status(201).json(row);
 });
 router.patch("/client/addresses/:id",requireAuth,async(req:AuthRequest,res):Promise<void>=>{
  const id=idOf(req.params.id);if(!id || !validAddress(req.body)){res.status(400).json({error:"Invalid address"});return;}
- const [row]=await db.update(clientAddressesTable).set(req.body).where(and(eq(clientAddressesTable.id,id),eq(clientAddressesTable.clientId,req.user!.id))).returning();
+ const [row]=await db.update(clientAddressesTable).set(Object.fromEntries(addressFields.filter(k=>req.body[k]!==undefined).map(k=>[k,req.body[k]]))).where(and(eq(clientAddressesTable.id,id),eq(clientAddressesTable.clientId,req.user!.id))).returning();
  if(!row){res.status(404).json({error:"Not found"});return;}res.json(row);
 });
 router.delete("/client/addresses/:id",requireAuth,async(req:AuthRequest,res):Promise<void>=>{
