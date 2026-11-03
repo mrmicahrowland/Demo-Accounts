@@ -22,7 +22,7 @@ const me = (token) => fetch(origin + "/api/auth/me", { headers: { authorization:
 
 test("live HTTP auth: register, login, refresh rotation, replay rejection, logout revocation", async () => {
   const registration = await post("/api/auth/register", { email, password, firstName: "E2E", lastName: "Tester" });
-  assert.equal(registration.status, 201, await registration.text().catch(() => ""));
+  assert.equal(registration.status, 201, "registration must succeed");
   const initialCookie = cookieOf(registration);
   const registered = await registration.json();
   assert.equal((await me(registered.token)).status, 200);
