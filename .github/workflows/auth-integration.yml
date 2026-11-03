@@ -52,7 +52,7 @@ jobs:
           API_PID=$!
           trap 'kill $API_PID 2>/dev/null || true; cat /tmp/auth-api.log' EXIT
           for i in $(seq 1 40); do
-            if curl -fsS http://127.0.0.1:4010/api/health >/dev/null 2>&1; then break; fi
+            if curl -fsS http://127.0.0.1:4010/api/healthz >/dev/null 2>&1; then break; fi
             if ! kill -0 "$API_PID" 2>/dev/null; then echo "API exited"; exit 1; fi
             sleep 1
           done
