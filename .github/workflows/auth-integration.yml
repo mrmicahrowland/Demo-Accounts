@@ -47,8 +47,6 @@ jobs:
           pnpm --filter @workspace/db run push
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/migrations/0001_auth_sessions.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/migrations/0002_audit_logs.sql
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/migrations/0003_service_requests.sql
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/migrations/0004_client_extensions.sql
       - name: Start API and verify live authentication
         run: |
           node artifacts/api-server/dist/index.mjs > /tmp/auth-api.log 2>&1 &
