@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
+import { usersTable, termsVersionsTable, termsAcceptancesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { hashPassword, comparePassword, signToken, requireAuth, AuthRequest } from "../lib/auth";
 
@@ -33,7 +33,7 @@ router.post("/auth/login", rateLimit(8, 900000), async (req, res): Promise<void>
 });
 
 router.post("/auth/register", rateLimit(5, 3600000), async (req, res): Promise<void> => {
-  const { email, password, firstName, lastName, phone } = req.body ?? {};
+  const { email, password, firstName, lastName, phone, termsVersionId, acceptTerms } = req.body ?? {};
   if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || typeof password !== "string" || password.length < 12 || password.length > 128 || typeof firstName !== "string" || typeof lastName !== "string" || firstName.length > 100 || lastName.length > 100 || (phone != null && (typeof phone !== "string" || phone.length > 40))) { res.status(400).json({ error: "Invalid registration fields" }); return; }
   if (!email || !password || !firstName || !lastName) {
     res.status(400).json({ error: "Missing required fields" });
@@ -44,15 +44,24 @@ router.post("/auth/register", rateLimit(5, 3600000), async (req, res): Promise<v
     res.status(400).json({ error: "Email already registered" });
     return;
   }
+  const [activeTerms] = await db.select().from(termsVersionsTable).where(eq(termsVersionsTable.active, true)).limit(1);
+  if (!activeTerms) { res.status(503).json({ error: "Registration unavailable until terms are published" }); return; }
+  if (acceptTerms !== true || termsVersionId !== activeTerms.id) {
+    res.status(400).json({ error: "You must accept the current Terms and Conditions" }); return;
+  }
   const passwordHash = await hashPassword(password);
-  const [user] = await db.insert(usersTable).values({
+  const user = await db.transaction(async (tx) => {
+    const [created] = await tx.insert(usersTable).values({
     email: email.toLowerCase(),
     passwordHash,
     firstName,
     lastName,
     phone: phone ?? null,
     role: "client",
-  }).returning();
+    }).returning();
+    await tx.insert(termsAcceptancesTable).values({ userId: created.id, termsVersionId: activeTerms.id });
+    return created;
+  });
   const sessionId = await createSession(user.id, res);
   const token = signToken({ id: user.id, email: user.email, role: user.role }, sessionId);
   const { passwordHash: _, ...safeUser } = user;
