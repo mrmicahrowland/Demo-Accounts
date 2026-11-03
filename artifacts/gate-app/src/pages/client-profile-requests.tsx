@@ -20,7 +20,7 @@ export function ClientProfilePage() {
     if (!profile) return;
     setError(""); setStatus("");
     try {
-      const updates = Object.fromEntries(fields.map(([key]) => [key, profile[key] || null]));
+      const updates = Object.fromEntries(fields.map(([key]) => [key, ["firstName", "lastName"].includes(key) ? profile[key] : (profile[key] || null)]));
       const saved = await clientApi<Profile>("/profile", { method: "PATCH", body: JSON.stringify(updates) });
       setProfile(saved); setStatus("Profile saved");
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to save"); }
