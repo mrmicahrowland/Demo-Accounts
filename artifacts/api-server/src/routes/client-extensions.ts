@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { db, clientAddressesTable, guestServiceRequestsTable, termsVersionsTable, termsAcceptancesTable, usersTable } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { db, clientAddressesTable, guestServiceRequestsTable, termsVersionsTable, termsAcceptancesTable, emailChangeRequestsTable, usersTable } from "@workspace/db";
+import { eq, and, desc, isNull, gt } from "drizzle-orm";
+import { randomBytes, createHash } from "node:crypto";
 import { requireAuth, requireRole, AuthRequest } from "../lib/auth";
 import { rateLimit } from "../lib/rate-limit";
 const router = Router();
@@ -49,8 +50,36 @@ router.post("/client/email-change",requireAuth,rateLimit(3,3600000),async(req:Au
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254){res.status(400).json({error:"Invalid email"});return;}
  const [existing]=await db.select({id:usersTable.id}).from(usersTable).where(eq(usersTable.email,email));
  if(existing){res.status(409).json({error:"Email unavailable"});return;}
- // No verification token is generated until a secure email delivery provider is configured.
- res.status(503).json({error:"Email verification delivery is not configured; no email change was made"});
+ const key=process.env.RESEND_API_KEY, from=process.env.VERIFICATION_EMAIL_FROM, origin=process.env.PUBLIC_APP_URL;
+ if(!key||!from||!origin||!/^https:\/\//.test(origin)){res.status(503).json({error:"Email verification provider not configured"});return;}
+ const token=randomBytes(32).toString("hex"),tokenHash=createHash("sha256").update(token).digest("hex");
+ const [pending]=await db.insert(emailChangeRequestsTable).values({userId:req.user!.id,newEmail:email,tokenHash,expiresAt:new Date(Date.now()+30*60*1000)}).returning({id:emailChangeRequestsTable.id});
+ const verifyUrl=origin.replace(/\/$/,"")+"/verify-email?token="+encodeURIComponent(token);
+ try {
+  const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({from,to:[email],subject:"Verify your new email address",text:"Confirm your new email address within 30 minutes: "+verifyUrl})});
+  if(!response.ok)throw new Error("Delivery rejected");
+ }catch{
+  await db.delete(emailChangeRequestsTable).where(eq(emailChangeRequestsTable.id,pending.id));
+  res.status(502).json({error:"Verification email could not be sent"});return;
+ }
+ res.status(202).json({message:"Verification email sent"});
+});
+router.post("/public/email-change/confirm",rateLimit(10,3600000),async(req,res):Promise<void>=>{
+ const token=req.body?.token;
+ if(typeof token!=="string"||!/^[0-9a-f]{64}$/.test(token)){res.status(400).json({error:"Invalid token"});return;}
+ const hash=createHash("sha256").update(token).digest("hex");
+ try{
+  const changed=await db.transaction(async tx=>{
+   const [pending]=await tx.select().from(emailChangeRequestsTable).where(and(eq(emailChangeRequestsTable.tokenHash,hash),isNull(emailChangeRequestsTable.usedAt),gt(emailChangeRequestsTable.expiresAt,new Date()))).for("update");
+   if(!pending)return false;
+   const [updated]=await tx.update(emailChangeRequestsTable).set({usedAt:new Date()}).where(and(eq(emailChangeRequestsTable.id,pending.id),isNull(emailChangeRequestsTable.usedAt))).returning();
+   if(!updated)return false;
+   await tx.update(usersTable).set({email:pending.newEmail}).where(eq(usersTable.id,pending.userId));
+   return true;
+  });
+  if(!changed){res.status(400).json({error:"Invalid or expired token"});return;}
+  res.json({verified:true});
+ }catch{res.status(409).json({error:"Email could not be updated"});}
 });
 router.post("/public/service-requests",rateLimit(3,3600000),async(req,res):Promise<void>=>{
  const b=req.body??{};const allowed=["name","email","phone","type","description","serviceAddress","city","state","zip"];
