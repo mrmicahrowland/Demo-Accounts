@@ -1,0 +1,2 @@
+CREATE TABLE client_images (id serial PRIMARY KEY, owner_id integer NOT NULL REFERENCES users(id), service_request_id integer REFERENCES service_requests(id), kind text NOT NULL CHECK(kind IN ('avatar','service')), mime_type text NOT NULL CHECK(mime_type IN ('image/jpeg','image/png','image/webp')), data bytea NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX client_images_owner_idx ON client_images(owner_id);
