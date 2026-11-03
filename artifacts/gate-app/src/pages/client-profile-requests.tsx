@@ -17,10 +17,10 @@ export function ClientProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
-  useEffect(() => { clientApi<Profile>("/profile").then(setProfile).catch(e => setError(e.message)); }, []);
+  useEffect(() => { clientApi<Profile & {avatarUrl?:string|null}>("/profile").then(async p=>{setProfile(p);if(p.avatarUrl?.startsWith("/api/client/images/")){const token=await refreshAccessToken();const r=await fetch(p.avatarUrl,{headers:{Authorization:"Bearer "+token}});if(r.ok)setAvatar(URL.createObjectURL(await r.blob()));}}).catch(e => setError(e.message)); }, []);
   const [newEmail,setNewEmail]=useState("");
   const [avatar,setAvatar]=useState<string|null>(null);
-  async function uploadAvatar(file:File){try{const token=await refreshAccessToken();const response=await fetch("/api/client/images?kind=avatar",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":file.type},body:file});if(!response.ok)throw Error("Image upload failed");const result=await response.json();setAvatar(result.url);setStatus("Avatar uploaded")}catch(e){setError(e instanceof Error?e.message:"Upload failed")}}
+  async function uploadAvatar(file:File){try{const token=await refreshAccessToken();const response=await fetch("/api/client/images?kind=avatar",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":file.type},body:file});if(!response.ok)throw Error("Image upload failed");const result=await response.json();const imageResponse=await fetch(result.url,{headers:{"Authorization":"Bearer "+token}});if(imageResponse.ok)setAvatar(URL.createObjectURL(await imageResponse.blob()));setStatus("Avatar uploaded")}catch(e){setError(e instanceof Error?e.message:"Upload failed")}}
   async function changeEmail(){try{await clientApi("/email-change",{method:"POST",body:JSON.stringify({email:newEmail})});setStatus("Check your new email for a verification link")}catch(e){setError(e instanceof Error?e.message:"Unable to request verification")}}
   async function save() {
     if (!profile) return;
@@ -36,7 +36,7 @@ export function ClientProfilePage() {
     {error && <p role="alert" className="text-destructive">{error}</p>}
     {status && <p role="status">{status}</p>}
     {!profile ? <p>Loading profile…</p> : <Card><CardHeader><CardTitle>Contact information</CardTitle></CardHeader><CardContent className="space-y-4">
-      <div><Label>Current email</Label><Input value={profile.email} disabled /><Label>New email</Label><Input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)}/><Button type="button" onClick={changeEmail} disabled={!newEmail}>Send verification email</Button></div><div><Label>Avatar (JPEG, PNG, WebP; max 3 MB)</Label><Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.target.files?.[0];if(file)void uploadAvatar(file)}}/>{avatar&&<p role="status">Avatar uploaded securely</p>}</div>
+      <div><Label>Current email</Label><Input value={profile.email} disabled /><Label>New email</Label><Input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)}/><Button type="button" onClick={changeEmail} disabled={!newEmail}>Send verification email</Button></div><div>{avatar&&<img src={avatar} alt="Your profile avatar" className="h-20 w-20 rounded-full object-cover" />}<Label>Avatar (JPEG, PNG, WebP; max 3 MB)</Label><Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.target.files?.[0];if(file)void uploadAvatar(file)}}/>{avatar&&<p role="status">Avatar uploaded securely</p>}</div>
       {fields.map(([key,label]) => <div key={key}><Label htmlFor={key}>{label}</Label><Input id={key} value={profile[key] ?? ""} onChange={e => setProfile(p => p ? { ...p, [key]: e.target.value } : p)} /></div>)}
       <Button onClick={save}>Save profile</Button>
     </CardContent></Card>}
