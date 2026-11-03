@@ -5,7 +5,7 @@ on:
     branches: [auth-e2e-verification-2026-11]
 jobs:
   auth-http:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       SESSION_SECRET: ci-auth-e2e-secret-with-more-than-32-characters
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/auth_e2e
