@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { clientApi } from "@/lib/client-api";
+import { AddressManager } from "@/components/client-address-manager";
+import { refreshAccessToken } from "@/lib/api";
 
 type Profile = { firstName: string; lastName: string; phone: string | null; address: string | null; city: string | null; state: string | null; zip: string | null; email: string };
 const fields: Array<[keyof Profile, string]> = [["firstName","First name"],["lastName","Last name"],["phone","Phone"],["address","Street address"],["city","City"],["state","State"],["zip","ZIP code"]];
@@ -16,6 +18,10 @@ export function ClientProfilePage() {
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   useEffect(() => { clientApi<Profile>("/profile").then(setProfile).catch(e => setError(e.message)); }, []);
+  const [newEmail,setNewEmail]=useState("");
+  const [avatar,setAvatar]=useState<string|null>(null);
+  async function uploadAvatar(file:File){try{const token=await refreshAccessToken();const response=await fetch("/api/client/images?kind=avatar",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":file.type},body:file});if(!response.ok)throw Error("Image upload failed");const result=await response.json();setAvatar(result.url);setStatus("Avatar uploaded")}catch(e){setError(e instanceof Error?e.message:"Upload failed")}}
+  async function changeEmail(){try{await clientApi("/email-change",{method:"POST",body:JSON.stringify({email:newEmail})});setStatus("Check your new email for a verification link")}catch(e){setError(e instanceof Error?e.message:"Unable to request verification")}}
   async function save() {
     if (!profile) return;
     setError(""); setStatus("");
@@ -30,10 +36,11 @@ export function ClientProfilePage() {
     {error && <p role="alert" className="text-destructive">{error}</p>}
     {status && <p role="status">{status}</p>}
     {!profile ? <p>Loading profile…</p> : <Card><CardHeader><CardTitle>Contact information</CardTitle></CardHeader><CardContent className="space-y-4">
-      <div><Label>Email</Label><Input value={profile.email} disabled /><p className="text-xs text-muted-foreground">Email changes require verification and will be added in a subsequent update.</p></div>
+      <div><Label>Current email</Label><Input value={profile.email} disabled /><Label>New email</Label><Input type="email" value={newEmail} onChange={e=>setNewEmail(e.target.value)}/><Button type="button" onClick={changeEmail} disabled={!newEmail}>Send verification email</Button></div><div><Label>Avatar (JPEG, PNG, WebP; max 3 MB)</Label><Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.target.files?.[0];if(file)void uploadAvatar(file)}}/>{avatar&&<p role="status">Avatar uploaded securely</p>}</div>
       {fields.map(([key,label]) => <div key={key}><Label htmlFor={key}>{label}</Label><Input id={key} value={profile[key] ?? ""} onChange={e => setProfile(p => p ? { ...p, [key]: e.target.value } : p)} /></div>)}
       <Button onClick={save}>Save profile</Button>
     </CardContent></Card>}
+    <AddressManager />
   </div></AppLayout></ProtectedRoute>;
 }
 
@@ -44,13 +51,15 @@ export function ClientServiceRequestsPage() {
   const [form, setForm] = useState({ type: "repair", description: "", serviceAddress: "", city: "", state: "", zip: "", gateMaterial: "", gateConfiguration: "", gateLengthFeet: "", gateHeightFeet: "", existingOperator: "" });
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [photos,setPhotos]=useState<File[]>([]);
   useEffect(() => { clientApi<ServiceRequest[]>("/service-requests").then(setItems).catch(e => setError(e.message)); }, []);
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setError(""); setStatus("");
     try {
       const payload = Object.fromEntries(Object.entries(form).filter(([,v]) => v !== ""));
       const created = await clientApi<ServiceRequest>("/service-requests", { method: "POST", body: JSON.stringify(payload) });
-      setItems(previous => [created, ...previous]); setStatus("Service request submitted");
+      if(photos.length){const token=await refreshAccessToken();for(const photo of photos){const r=await fetch("/api/client/images?kind=service&serviceRequestId="+created.id,{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":photo.type},body:photo});if(!r.ok)throw Error("Request saved, but an image failed to upload");}}
+      setItems(previous => [created, ...previous]); setStatus("Service request submitted");setPhotos([]);
       setForm(p => ({ ...p, description: "" }));
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to submit"); }
   }
@@ -64,6 +73,7 @@ export function ClientServiceRequestsPage() {
         {([["serviceAddress","Service address"],["city","City"],["state","State"],["zip","ZIP code"],["gateMaterial","Gate material (optional)"],["gateConfiguration","Gate configuration (optional)"],["gateLengthFeet","Gate length in feet (optional)"],["gateHeightFeet","Gate height in feet (optional)"],["existingOperator","Existing gate operator (optional)"]] as const).map(([key,label]) => <div key={key}><Label htmlFor={key}>{label}</Label><Input id={key} required={["serviceAddress","city","state","zip"].includes(key)} value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} /></div>)}
         <div><Label htmlFor="description">Describe your service needs</Label><Textarea id="description" required value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} /></div>
         {form.type === "emergency" && <p className="text-sm">Next-day emergency service: $75 site visit plus $150 for the first hour of troubleshooting. Additional work is quoted separately.</p>}
+        <div><Label>Gate photos (up to 4 images, 3 MB each)</Label><Input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e=>setPhotos(Array.from(e.target.files??[]).slice(0,4))}/></div>
         <Button type="submit">Submit request</Button>
       </form>
     </CardContent></Card>
