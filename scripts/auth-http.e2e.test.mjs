@@ -21,7 +21,10 @@ const cookieOf = response => {
 const me = (token) => fetch(origin + "/api/auth/me", { headers: { authorization: `Bearer ${token}` } });
 
 test("live HTTP auth: register, login, refresh rotation, replay rejection, logout revocation", async () => {
-  const registration = await post("/api/auth/register", { email, password, firstName: "E2E", lastName: "Tester" });
+  const termsResponse = await fetch(origin + "/api/public/terms");
+  assert.equal(termsResponse.status, 200);
+  const terms = await termsResponse.json();
+  const registration = await post("/api/auth/register", { email, password, firstName: "E2E", lastName: "Tester", acceptTerms: true, termsVersionId: terms.id });
   assert.equal(registration.status, 201, "registration must succeed");
   const initialCookie = cookieOf(registration);
   const registered = await registration.json();
