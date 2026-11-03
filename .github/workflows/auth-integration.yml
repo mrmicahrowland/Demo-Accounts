@@ -57,3 +57,22 @@ jobs:
             sleep 1
           done
           node --test scripts/auth-http.e2e.test.mjs
+      - name: Install headless Chromium and Playwright
+        run: |
+          mkdir -p /tmp/auth-browser
+          npm install --prefix /tmp/auth-browser --no-save playwright@1.58.2
+          /tmp/auth-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Browser UI authentication verification
+        run: |
+          node artifacts/api-server/dist/index.mjs > /tmp/auth-api.log 2>&1 &
+          API_PID=$!
+          PORT=4173 BASE_PATH=/ pnpm --filter @workspace/gate-app run serve > /tmp/auth-vite.log 2>&1 &
+          VITE_PID=$!
+          node scripts/auth-browser-proxy.mjs > /tmp/auth-proxy.log 2>&1 &
+          PROXY_PID=$!
+          trap 'kill $API_PID $VITE_PID $PROXY_PID 2>/dev/null || true; cat /tmp/auth-api.log /tmp/auth-vite.log /tmp/auth-proxy.log' EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4174/api/healthz >/dev/null 2>&1 && curl -fsS http://127.0.0.1:4174/login >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          node scripts/auth-browser.e2e.mjs
