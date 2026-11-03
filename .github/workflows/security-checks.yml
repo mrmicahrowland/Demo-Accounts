@@ -36,7 +36,7 @@ jobs:
       - run: pnpm run typecheck
       - run: pnpm --filter @workspace/api-server run build
       - name: Unit and source-contract security tests
-        run: pnpm exec tsx --test artifacts/api-server/src/__tests__/security.test.ts
+        run: pnpm dlx tsx@4.20.6 --test artifacts/api-server/src/__tests__/security.test.ts
       - name: Database schema migration smoke test
         run: |
           pnpm --filter @workspace/db run push
