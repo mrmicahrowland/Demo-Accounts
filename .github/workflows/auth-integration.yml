@@ -1,0 +1,78 @@
+name: Authentication integration
+on:
+  pull_request:
+  push:
+    branches: [auth-e2e-verification-2026-11]
+jobs:
+  auth-http:
+    runs-on: ubuntu-24.04
+    env:
+      SESSION_SECRET: ci-auth-e2e-secret-with-more-than-32-characters
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/auth_e2e
+      CORS_ORIGINS: http://127.0.0.1:4173
+      PORT: "4010"
+      NODE_ENV: test
+      AUTH_TEST_ORIGIN: http://127.0.0.1:4010
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: auth_e2e
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+      - run: pnpm --filter @workspace/api-server run build
+      - run: pnpm --filter @workspace/gate-app run build
+        env:
+          BASE_PATH: /
+          PORT: "4173"
+      - name: Prepare test database
+        run: |
+          pnpm --filter @workspace/db run push
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/migrations/0001_auth_sessions.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f lib/db/migrations/0002_audit_logs.sql
+      - name: Start API and verify live authentication
+        run: |
+          node artifacts/api-server/dist/index.mjs > /tmp/auth-api.log 2>&1 &
+          API_PID=$!
+          trap 'kill $API_PID 2>/dev/null || true; cat /tmp/auth-api.log' EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4010/api/healthz >/dev/null 2>&1; then break; fi
+            if ! kill -0 "$API_PID" 2>/dev/null; then echo "API exited"; exit 1; fi
+            sleep 1
+          done
+          node --test scripts/auth-http.e2e.test.mjs
+      - name: Install headless Chromium and Playwright
+        run: |
+          mkdir -p /tmp/auth-browser
+          npm install --prefix /tmp/auth-browser --no-save playwright@1.58.2
+          /tmp/auth-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Browser UI authentication verification
+        run: |
+          node artifacts/api-server/dist/index.mjs > /tmp/auth-api.log 2>&1 &
+          API_PID=$!
+          PORT=4173 BASE_PATH=/ pnpm --filter @workspace/gate-app run serve > /tmp/auth-vite.log 2>&1 &
+          VITE_PID=$!
+          node scripts/auth-browser-proxy.mjs > /tmp/auth-proxy.log 2>&1 &
+          PROXY_PID=$!
+          trap 'kill $API_PID $VITE_PID $PROXY_PID 2>/dev/null || true; cat /tmp/auth-api.log /tmp/auth-vite.log /tmp/auth-proxy.log' EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4174/api/healthz >/dev/null 2>&1 && curl -fsS http://127.0.0.1:4174/login >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          node scripts/auth-browser.e2e.mjs
