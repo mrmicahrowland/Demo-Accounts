@@ -1,4 +1,5 @@
 export * from "./users";
+export * from "./service_requests";
 export * from "./estimates";
 export * from "./invoices";
 export * from "./jobs";
@@ -11,3 +12,5 @@ export * from "./settings";
 export * from "./time_entries";
 export * from "./auth_sessions";
 export * from "./audit_logs";
+export * from "./client_extensions";
+export * from "./client_images";

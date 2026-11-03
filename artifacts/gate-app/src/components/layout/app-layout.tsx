@@ -50,6 +50,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Blog", href: "/blog", icon: <BookOpen size={18} />, roles: ["admin", "manager"] },
   { label: "FAQ", href: "/faq", icon: <HelpCircle size={18} />, roles: ["admin", "manager"] },
   { label: "Settings", href: "/settings", icon: <Settings size={18} />, roles: ["admin"] },
+  { label: "My Profile", href: "/client/profile", icon: <Users size={18} />, roles: ["client"] },
+  { label: "Request Service", href: "/client/service-requests", icon: <Briefcase size={18} />, roles: ["client"] },
   // Client items
   { label: "My Estimates", href: "/client/estimates", icon: <FileText size={18} />, roles: ["client"] },
   { label: "My Invoices", href: "/client/invoices", icon: <Receipt size={18} />, roles: ["client"] },

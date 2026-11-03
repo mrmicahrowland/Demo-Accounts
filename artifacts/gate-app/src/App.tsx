@@ -4,7 +4,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "@/lib/api";
 import LoginPage from "@/pages/login";
+import RegisterPage from "@/pages/register";
+import VerifyEmailPage from "@/pages/verify-email";
+import { ClientProfilePage, ClientServiceRequestsPage } from "@/pages/client-profile-requests";
 import RequestEstimatePage from "@/pages/request-estimate";
+import GuestServiceRequestPage from "@/pages/guest-service-request";
 import PortfolioPage from "@/pages/portfolio";
 import FaqPage from "@/pages/faq";
 import DashboardPage from "@/pages/dashboard";
@@ -54,7 +58,10 @@ function Router() {
     <Switch>
       <Route path="/" component={AuthRedirect} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/request-estimate" component={RequestEstimatePage} />
+      <Route path="/request-service" component={GuestServiceRequestPage} />
       <Route path="/portfolio" component={PortfolioPage} />
       <Route path="/faq" component={FaqPage} />
       <Route path="/dashboard" component={DashboardPage} />
@@ -67,6 +74,8 @@ function Router() {
       <Route path="/client/estimates" component={ClientEstimatesPage} />
       <Route path="/client/invoices" component={ClientInvoicesPage} />
       <Route path="/client/jobs" component={ClientJobsPage} />
+      <Route path="/client/profile" component={ClientProfilePage} />
+      <Route path="/client/service-requests" component={ClientServiceRequestsPage} />
       <Route component={NotFound} />
     </Switch>
   );

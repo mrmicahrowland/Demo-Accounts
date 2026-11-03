@@ -7,6 +7,8 @@ servers:
   - url: /api
     description: Base API path
 tags:
+  - name: client
+    description: Client profile and service requests
   - name: health
     description: Health operations
   - name: auth
@@ -37,6 +39,150 @@ tags:
     description: Time tracking
 
 paths:
+  /client/images:
+    post:
+      tags: [client]
+      operationId: uploadClientImage
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: kind, required: true, schema: { type: string, enum: [avatar, service] } }
+        - { in: query, name: serviceRequestId, required: false, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          image/jpeg: { schema: { type: string, format: binary } }
+          image/png: { schema: { type: string, format: binary } }
+          image/webp: { schema: { type: string, format: binary } }
+      responses:
+        "201": { description: Private image uploaded }
+  /client/images/{id}:
+    get:
+      tags: [client]
+      operationId: getClientImage
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Owner-scoped image bytes }
+  /client/service-requests/{id}/images:
+    get:
+      tags: [client]
+      operationId: listServiceRequestImages
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Images for owned service request }
+  /public/email-change/confirm:
+    post:
+      tags: [client]
+      operationId: confirmEmailChange
+      responses:
+        "200": { description: Verified email updated }
+  /client/profile:
+    get:
+      tags: [client]
+      operationId: getClientProfile
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Current authenticated client profile }
+    patch:
+      tags: [client]
+      operationId: updateClientProfile
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                phone: { type: [string, "null"] }
+                address: { type: [string, "null"] }
+                city: { type: [string, "null"] }
+                state: { type: [string, "null"] }
+                zip: { type: [string, "null"] }
+      responses:
+        "200": { description: Updated profile }
+  /client/service-requests:
+    get:
+      tags: [client]
+      operationId: listClientServiceRequests
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Client-owned requests }
+    post:
+      tags: [client]
+      operationId: createClientServiceRequest
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201": { description: Request submitted }
+  /client/addresses:
+    get:
+      tags: [client]
+      operationId: listClientAddresses
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Client service addresses }
+    post:
+      tags: [client]
+      operationId: createClientAddress
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201": { description: Address added }
+  /client/addresses/{id}:
+    patch:
+      tags: [client]
+      operationId: updateClientAddress
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Updated address }
+    delete:
+      tags: [client]
+      operationId: deleteClientAddress
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+  /public/terms:
+    get:
+      tags: [client]
+      operationId: getActiveTerms
+      responses:
+        "200": { description: Current terms }
+  /client/terms/accept:
+    post:
+      tags: [client]
+      operationId: acceptCurrentTerms
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Terms accepted }
+  /public/service-requests:
+    post:
+      tags: [client]
+      operationId: createGuestServiceRequest
+      responses:
+        "201": { description: Guest service request submitted }
+  /client/email-change:
+    post:
+      tags: [client]
+      operationId: requestEmailChange
+      security: [{ bearerAuth: [] }]
+      responses:
+        "202": { description: Verification email sent }
+  /admin/terms:
+    post:
+      tags: [client]
+      operationId: publishTerms
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201": { description: Terms published }
   /healthz:
     get:
       operationId: healthCheck
