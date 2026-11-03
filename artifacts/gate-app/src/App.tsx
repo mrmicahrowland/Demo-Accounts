@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "@/lib/api";
 import LoginPage from "@/pages/login";
+import RegisterPage from "@/pages/register";
 import { ClientProfilePage, ClientServiceRequestsPage } from "@/pages/client-profile-requests";
 import RequestEstimatePage from "@/pages/request-estimate";
 import GuestServiceRequestPage from "@/pages/guest-service-request";
@@ -56,6 +57,7 @@ function Router() {
     <Switch>
       <Route path="/" component={AuthRedirect} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       <Route path="/request-estimate" component={RequestEstimatePage} />
       <Route path="/request-service" component={GuestServiceRequestPage} />
       <Route path="/portfolio" component={PortfolioPage} />
