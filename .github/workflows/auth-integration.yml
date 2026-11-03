@@ -58,7 +58,7 @@ jobs:
             if ! kill -0 "$API_PID" 2>/dev/null; then echo "API exited"; exit 1; fi
             sleep 1
           done
-          node --test scripts/auth-http.e2e.test.mjs
+          node --test scripts/auth-http.e2e.test.mjs scripts/client-http.e2e.test.mjs
       - name: Install headless Chromium and Playwright
         run: |
           mkdir -p /tmp/auth-browser
