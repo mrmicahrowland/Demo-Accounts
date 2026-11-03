@@ -5,18 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getRoleHomeRoute } from "@/lib/role-home";
-import { Eye, EyeOff, ShieldCheck, ChevronRight } from "lucide-react";
-
-const DEMO_ACCOUNTS = [
-  { role: "Admin", email: "admin@automaticgate.com", password: "admin123", color: "bg-amber-500/20 text-amber-400 border-amber-500/30", description: "Full system access" },
-  { role: "Manager", email: "manager@automaticgate.com", password: "manager123", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", description: "Manage jobs & estimates" },
-  { role: "Supervisor", email: "supervisor@automaticgate.com", password: "supervisor123", color: "bg-purple-500/20 text-purple-400 border-purple-500/30", description: "Field supervision" },
-  { role: "Crew", email: "crew@automaticgate.com", password: "crew123", color: "bg-green-500/20 text-green-400 border-green-500/30", description: "Job assignments" },
-  { role: "Client", email: "client@automaticgate.com", password: "client123", color: "bg-gray-500/20 text-gray-300 border-gray-500/30", description: "Client portal" },
-];
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const { login, isLoggingIn } = useAuth();
@@ -33,15 +24,6 @@ export default function LoginPage() {
       setLocation(getRoleHomeRoute(response.user.role));
     } catch {
       toast({ title: "Login failed", description: "Invalid email or password.", variant: "destructive" });
-    }
-  }
-
-  async function handleDemoLogin(demoEmail: string, demoPassword: string) {
-    try {
-      const response = await login({ email: demoEmail, password: demoPassword });
-      setLocation(getRoleHomeRoute(response.user.role));
-    } catch {
-      toast({ title: "Demo login failed", description: "Please try again.", variant: "destructive" });
     }
   }
 
@@ -139,35 +121,6 @@ export default function LoginPage() {
             </CardContent>
           </Card>
 
-          {/* Demo accounts */}
-          <Card className="border-primary/30 bg-primary/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <ShieldCheck size={16} className="text-primary" />
-                Demo Accounts — Click to Login
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {DEMO_ACCOUNTS.map(account => (
-                <button
-                  key={account.role}
-                  type="button"
-                  onClick={() => handleDemoLogin(account.email, account.password)}
-                  disabled={isLoggingIn}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/30 transition-colors text-left group"
-                >
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded border font-mono ${account.color} min-w-[72px] text-center`}>
-                    {account.role}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-mono text-foreground/80 truncate">{account.email}</p>
-                    <p className="text-xs text-muted-foreground">{account.description}</p>
-                  </div>
-                  <ChevronRight size={14} className="text-muted-foreground/50 group-hover:text-primary transition-colors flex-shrink-0" />
-                </button>
-              ))}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
