@@ -1,0 +1,7 @@
+CREATE TABLE client_addresses (id serial PRIMARY KEY, client_id integer NOT NULL REFERENCES users(id), label text NOT NULL DEFAULT 'Service address', address text NOT NULL, city text NOT NULL, state text NOT NULL, zip text NOT NULL, is_default boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX client_addresses_client_idx ON client_addresses(client_id);
+CREATE TABLE terms_versions (id serial PRIMARY KEY, version text NOT NULL UNIQUE, content text NOT NULL, active boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX terms_single_active_idx ON terms_versions(active) WHERE active = true;
+CREATE TABLE terms_acceptances (id serial PRIMARY KEY, user_id integer NOT NULL REFERENCES users(id), terms_version_id integer NOT NULL REFERENCES terms_versions(id), accepted_at timestamptz NOT NULL DEFAULT now(), UNIQUE(user_id,terms_version_id));
+CREATE TABLE email_change_requests (id serial PRIMARY KEY, user_id integer NOT NULL REFERENCES users(id), new_email text NOT NULL, token_hash text NOT NULL UNIQUE, expires_at timestamptz NOT NULL, used_at timestamptz);
+CREATE TABLE guest_service_requests (id serial PRIMARY KEY, name text NOT NULL, email text NOT NULL, phone text, type text NOT NULL, description text NOT NULL, service_address text NOT NULL, city text NOT NULL, state text NOT NULL, zip text NOT NULL, status text NOT NULL DEFAULT 'submitted', created_at timestamptz NOT NULL DEFAULT now());
