@@ -31,13 +31,7 @@ try {
   assert.ok(!Object.keys(storage.session).some(key => /auth_token|access_token|refresh_token/i.test(key)));
   await page.reload();
   await page.waitForURL(url => !url.pathname.endsWith("/login"), { timeout: 20000 });
-  await page.getByText("Sign Out", { exact: true }).first().waitFor({ state: "visible", timeout: 20000 }).catch(async () => {
-    await page.locator("[data-radix-dropdown-menu-trigger]").first().click();
-  });
-  // Radix account menu reveals the logout action.
-  if (!(await page.getByText("Sign Out", { exact: true }).first().isVisible())) {
-    await page.locator("[data-radix-dropdown-menu-trigger]").first().click();
-  }
+  await page.getByText("Browser Tester", { exact: true }).click();
   await page.getByText("Sign Out", { exact: true }).first().click();
   await page.waitForURL("**/login", { timeout: 20000 });
   assert.ok(!(await context.cookies()).some(cookie => cookie.name === "refresh_token"));
