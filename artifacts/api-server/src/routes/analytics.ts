@@ -52,17 +52,20 @@ router.get("/analytics/dashboard", requireRole("admin", "manager", "supervisor")
 });
 
 router.get("/analytics/revenue", requireRole("admin", "manager"), async (_req, res): Promise<void> => {
-  const months = [];
   const now = new Date();
-  const baseRevenue = [8200, 11400, 9800, 15600, 18200, 21500];
-  const baseJobs = [6, 9, 8, 12, 14, 17];
+  const months = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthStr = d.toLocaleString("en-US", { month: "short", year: "numeric" });
+    const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    const [revenue] = await db.select({
+      total: sql<number>`coalesce(sum(amount_paid), 0)::float`,
+    }).from(invoicesTable).where(sql`${invoicesTable.paidAt} >= ${d} and ${invoicesTable.paidAt} < ${next}`);
+    const [jobs] = await db.select({ total: sql<number>`count(*)::int` })
+      .from(jobsTable).where(sql`${jobsTable.completedAt} >= ${d} and ${jobsTable.completedAt} < ${next}`);
     months.push({
-      month: monthStr,
-      revenue: baseRevenue[5 - i] + Math.floor(Math.random() * 2000),
-      jobs: baseJobs[5 - i] + Math.floor(Math.random() * 3),
+      month: d.toLocaleString("en-US", { month: "short", year: "numeric" }),
+      revenue: Number(revenue?.total) || 0,
+      jobs: Number(jobs?.total) || 0,
     });
   }
   res.json(months);
@@ -82,8 +85,8 @@ router.get("/analytics/technicians", requireRole("admin", "manager"), async (_re
       name: `${tech.firstName} ${tech.lastName}`,
       completedJobs: Number(stats?.completed) || 0,
       totalHours: Number(hours?.total) || 0,
-      revenue: (Number(stats?.completed) || 0) * 1450,
-      rating: parseFloat((4.2 + Math.random() * 0.7).toFixed(1)),
+      revenue: null, // No verified technician revenue attribution available
+      rating: null, // No stored technician rating available
     };
   }));
   res.json(result);

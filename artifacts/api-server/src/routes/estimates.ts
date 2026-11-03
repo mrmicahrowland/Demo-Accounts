@@ -3,6 +3,7 @@ import { db, estimatesTable, usersTable, invoicesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, requireRole, AuthRequest } from "../lib/auth";
 
+import { validateFields } from "../lib/validate";
 const router = Router();
 
 let estimateCounter = 1000;
@@ -77,10 +78,12 @@ router.get("/estimates/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [est] = await db.select().from(estimatesTable).where(eq(estimatesTable.id, id));
   if (!est) { res.status(404).json({ error: "Not found" }); return; }
+  const actor = (req as AuthRequest).user!;
+  if (actor.role === "client" && est.clientId !== actor.id) { res.status(403).json({ error: "Forbidden" }); return; }
   res.json(await enrichEstimate(est));
 });
 
-router.patch("/estimates/:id", requireRole("admin", "manager"), async (req, res): Promise<void> => {
+router.patch("/estimates/:id", requireRole("admin", "manager"), validateFields({ status:"optionalText", estimateAmount:"money", siteVisitFee:"money", notes:"optionalText", description:"optionalText", imageUrls:"stringArray", clientId:"optionalId" }), async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [est] = await db.update(estimatesTable).set(req.body).where(eq(estimatesTable.id, id)).returning();
   if (!est) { res.status(404).json({ error: "Not found" }); return; }
@@ -96,6 +99,9 @@ router.delete("/estimates/:id", requireRole("admin", "manager"), async (req, res
 
 router.patch("/estimates/:id/approve", requireRole("admin", "manager", "client"), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  const [original] = await db.select().from(estimatesTable).where(eq(estimatesTable.id, id));
+  if (!original) { res.status(404).json({ error: "Not found" }); return; }
+  if (req.user!.role === "client" && original.clientId !== req.user!.id) { res.status(403).json({ error: "Forbidden" }); return; }
   const [est] = await db.update(estimatesTable).set({ status: "approved" }).where(eq(estimatesTable.id, id)).returning();
   if (!est) { res.status(404).json({ error: "Not found" }); return; }
   res.json(await enrichEstimate(est));
@@ -106,11 +112,14 @@ router.post("/estimates/:id/convert", requireRole("admin", "manager"), async (re
   const [est] = await db.select().from(estimatesTable).where(eq(estimatesTable.id, id));
   if (!est) { res.status(404).json({ error: "Not found" }); return; }
 
+  if (!est.clientId) { res.status(409).json({ error: "Link a valid client account before conversion" }); return; }
+  const [client] = await db.select().from(usersTable).where(eq(usersTable.id, est.clientId));
+  if (!client || client.role !== "client") { res.status(409).json({ error: "Valid client account required" }); return; }
   const invNum = `INV-${Date.now()}`;
   const amount = est.estimateAmount ? parseFloat(est.estimateAmount) : 0;
   const [inv] = await db.insert(invoicesTable).values({
     invoiceNumber: invNum,
-    clientId: est.clientId ?? 1,
+    clientId: est.clientId,
     estimateId: est.id,
     status: "pending",
     amount: amount.toString(),

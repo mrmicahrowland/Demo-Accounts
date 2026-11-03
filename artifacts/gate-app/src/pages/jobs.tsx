@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListJobs, useUpdateJobStatus, useListUsers, useAssignJob } from "@workspace/api-client-react";
+import { useListJobs, useUpdateJobStatus, useListUsers, useAssignJob, type JobStatusUpdateStatus } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ export default function JobsPage() {
     );
   });
 
-  async function changeStatus(id: number, status: string) {
+  async function changeStatus(id: number, status: JobStatusUpdateStatus) {
     try {
       await updateStatus.mutateAsync({ id, data: { status } });
       qc.invalidateQueries();
