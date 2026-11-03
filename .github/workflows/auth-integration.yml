@@ -2,7 +2,7 @@ name: Authentication integration
 on:
   pull_request:
   push:
-    branches: [auth-e2e-verification-2026-11]
+    branches: [main, production-readiness-hardening-2026-11]
 jobs:
   auth-http:
     runs-on: ubuntu-24.04
@@ -57,6 +57,7 @@ jobs:
             sleep 1
           done
           node --test scripts/auth-http.e2e.test.mjs
+          node --test scripts/production-readiness.e2e.test.mjs
       - name: Install headless Chromium and Playwright
         run: |
           mkdir -p /tmp/auth-browser
